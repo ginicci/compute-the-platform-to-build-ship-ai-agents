@@ -114,15 +114,15 @@ export function IntegrationsSection() {
         <h2 className={`text-6xl md:text-7xl lg:text-[128px] font-display tracking-tight leading-[0.9] transition-all duration-1000 ${
           isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
         }`}>
-          Connect
+          Bring your stack.
           <br />
-          <span className="text-muted-foreground">everything.</span>
+          <span className="text-muted-foreground">Ginicci brings the flow.</span>
         </h2>
 
         <p className={`mt-8 text-xl text-muted-foreground leading-relaxed max-w-lg mx-auto transition-all duration-1000 delay-100 ${
           isVisible ? "opacity-100" : "opacity-0"
         }`}>
-          Your agents connect to 100+ tools and services. They read, write, and act autonomously across your entire stack.
+          Connect Ginicci to the systems your business already runs on. Give AI the context to read, reason, and act across your stack.
         </p>
       </div>
 

@@ -21,8 +21,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'COMPUTE - AI Agents for Distributed Computing',
-  description: 'Deploy autonomous AI agents on distributed infrastructure. Offload complex tasks to intelligent workers that run 24/7.',
+  title: 'Ginicci - The AI Platform for Work That Moves',
+  description: 'Build, deploy, and orchestrate intelligent AI agents that turn complex work into reliable outcomes.',
   generator: 'v0.app',
 }
 

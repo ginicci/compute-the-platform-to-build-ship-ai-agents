@@ -74,9 +74,9 @@ export function SecuritySection() {
           <h2 className={`text-6xl md:text-7xl lg:text-[128px] font-display tracking-tight leading-[0.9] mb-12 transition-all duration-1000 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}>
-            Autonomous,
+            Powerful,
             <br />
-            <span className="text-muted-foreground">not uncontrolled.</span>
+            <span className="text-muted-foreground">with guardrails.</span>
           </h2>
           
           {/* Description — below title */}
@@ -84,7 +84,7 @@ export function SecuritySection() {
             isVisible ? "opacity-100" : "opacity-0"
           }`}>
             <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl">
-              Your agents are powerful but constrained. Enterprise-grade security ensures they only do what you allow.
+              Ginicci keeps every action observable, permissioned, and accountable—so teams can trust AI with meaningful work.
             </p>
           </div>
         </div>

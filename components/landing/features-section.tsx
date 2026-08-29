@@ -167,14 +167,14 @@ export function FeaturesSection() {
               >
                 Intelligent
                 <br />
-                <span className="text-muted-foreground">workers.</span>
+                <span className="text-muted-foreground">momentum.</span>
               </h2>
             </div>
             <div className="lg:col-span-5 lg:pb-4">
               <p className={`text-xl text-muted-foreground leading-relaxed transition-all duration-1000 delay-200 ${
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               }`}>
-                Deploy autonomous AI agents that execute complex tasks across distributed infrastructure. No supervision required.
+                Ginicci gives every team a dependable layer of intelligence to research, reason, and act across the tools they already use.
               </p>
             </div>
           </div>

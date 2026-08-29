@@ -83,9 +83,9 @@ export function PricingSection() {
             <h2 className={`text-6xl md:text-7xl lg:text-[128px] font-display tracking-tight leading-[0.9] transition-all duration-1000 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}>
-              Pay for
+              Invest in
               <br />
-              <span className="text-stroke">results.</span>
+              <span className="text-stroke">momentum.</span>
             </h2>
           </div>
           

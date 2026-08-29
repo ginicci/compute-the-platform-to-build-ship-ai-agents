@@ -71,9 +71,9 @@ export function DevelopersSection() {
             Developer SDK
           </span>
           <h2 className="text-6xl md:text-7xl lg:text-[128px] font-display tracking-tight leading-[0.9]">
-            Code your agents.
+            Build with intelligence.
             <br />
-            <span className="text-muted-foreground">Or let them code.</span>
+            <span className="text-muted-foreground">Ship with confidence.</span>
           </h2>
         </div>
 
@@ -84,8 +84,7 @@ export function DevelopersSection() {
           }`}
         >
           <p className="text-xl text-muted-foreground mb-12 leading-relaxed max-w-md">
-            A powerful SDK for building, deploying, and orchestrating AI agents. 
-            Define behaviors in code or natural language.
+            Ginicci gives developers the primitives to build reliable AI workflows, connect live data, and turn ideas into production systems.
           </p>
           <div className="grid grid-cols-2 gap-6">
             {features.map((feature, index) => (

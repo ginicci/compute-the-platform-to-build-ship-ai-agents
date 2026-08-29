@@ -44,7 +44,7 @@ export function InfrastructureSection() {
             isVisible ? "opacity-100" : "opacity-0"
           }`}>
             <span className="w-12 h-px bg-foreground/20" />
-            Global infrastructure
+            Built for momentum
           </span>
           
           <div className="grid lg:grid-cols-[auto_1fr] gap-8 lg:gap-16 items-stretch">
@@ -64,16 +64,15 @@ export function InfrastructureSection() {
               <h2 className={`text-6xl md:text-7xl lg:text-[128px] font-display tracking-tight leading-[0.9] transition-all duration-1000 ${
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}>
-                Global by
+                Reliable by
                 <br />
-                <span className="text-muted-foreground">default.</span>
+                <span className="text-muted-foreground">design.</span>
               </h2>
 
               <p className={`mt-8 text-xl text-muted-foreground leading-relaxed max-w-lg transition-all duration-1000 delay-100 ${
                 isVisible ? "opacity-100" : "opacity-0"
               }`}>
-                Your agents run on distributed infrastructure across 29 regions.
-                Sub-50ms latency to 99% of the world.
+                Ginicci coordinates intelligent work across resilient infrastructure, so your team can move quickly without sacrificing control.
               </p>
             </div>
           </div>
