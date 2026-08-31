@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "react";
 const steps = [
   {
     number: "01",
-    title: "Define",
+    title: "Discover",
     subtitle: "your agent",
-    description: "Describe what your agent should do. Set its capabilities, constraints, and goals in natural language or code.",
+    description: "Tell Northstar what you are building, what you need next, and what outcome you want to reach.",
     code: `const researcher = new Agent({
   role: 'Research Analyst',
   capabilities: ['web', 'docs', 'api'],
@@ -17,9 +17,9 @@ const steps = [
   },
   {
     number: "02",
-    title: "Assign",
+    title: "Develop",
     subtitle: "the task",
-    description: "Give your agent a mission. It breaks down complex tasks into steps and executes them autonomously.",
+    description: "Develop your path with relevant programs, playbooks, mentors, and resources—not a generic catalogue.",
     code: `await researcher.execute({
   task: 'Analyze competitor pricing',
   sources: ['public-data', 'news'],
@@ -29,9 +29,9 @@ const steps = [
   },
   {
     number: "03",
-    title: "Monitor",
+    title: "Connect",
     subtitle: "& scale",
-    description: "Track progress in real-time. Spin up more agents as needed. Pay only for compute used.",
+    description: "Get warm, vetted introductions to partners, advisors, providers, buyers, and peers who can move the work forward.",
     code: `optimus.dashboard({
   agents: [researcher],
   metrics: ['tasks', 'latency', 'cost'],

@@ -57,7 +57,7 @@ export function CtaSection() {
                 </h2>
 
                 <p className="text-xl text-muted-foreground mb-12 leading-relaxed max-w-xl">
-                  Join forward-thinking teams using Ginicci to automate the work that slows them down. Start building your first intelligent workflow today.
+                  Northstar is for people and organizations building what comes next. Request access and find the people, knowledge, and opportunities that move you forward.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-start gap-4">
@@ -65,7 +65,7 @@ export function CtaSection() {
                     size="lg"
                     className="bg-foreground hover:bg-foreground/90 text-background px-8 h-14 text-base rounded-full group"
                   >
-                    Deploy your first agent
+                    Request access to Northstar
                     <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                   </Button>
                   <Button

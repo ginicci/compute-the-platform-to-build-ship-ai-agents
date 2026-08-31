@@ -7,22 +7,22 @@ const metrics = [
     value: 12847392, 
     suffix: "", 
     prefix: "",
-    label: "Tasks completed today",
-    sublabel: "by 23,847 active agents",
+    label: "Areas you can develop",
+    sublabel: "across one connected ecosystem",
   },
   { 
     value: 99, 
     suffix: ".99%", 
     prefix: "",
-    label: "Availability",
-    sublabel: "across all regions",
+    label: "Growth is reciprocal",
+    sublabel: "people and businesses, together",
   },
   { 
     value: 340, 
     suffix: "ms", 
     prefix: "<",
-    label: "Average execution",
-    sublabel: "p99 latency",
+    label: "One connected system",
+    sublabel: "from discovery to growth",
   },
 ];
 
@@ -261,7 +261,7 @@ export function MetricsSection() {
             }`}>
               Real-time
               <br />
-              <span className="text-muted-foreground">agent metrics.</span>
+              <span className="text-muted-foreground">growth metrics.</span>
             </h2>
           </div>
         </div>

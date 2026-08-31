@@ -6,7 +6,7 @@ import { ArrowRight, Check, Zap } from "lucide-react";
 const plans = [
   {
     name: "Explorer",
-    description: "For tinkering and small automations",
+    description: "A focused entry point into the Northstar ecosystem",
     price: { monthly: 0, annual: 0 },
     features: [
       "3 concurrent agents",
@@ -20,7 +20,7 @@ const plans = [
   },
   {
     name: "Builder",
-    description: "For teams shipping with agents",
+    description: "A deeper operating layer for active founders and professionals",
     price: { monthly: 79, annual: 65 },
     features: [
       "25 concurrent agents",
@@ -35,8 +35,8 @@ const plans = [
     highlight: true,
   },
   {
-    name: "Scale",
-    description: "For agent-first organizations",
+    name: "Catalyst",
+    description: "High-touch support for ambitious ecosystem builders",
     price: { monthly: null, annual: null },
     features: [
       "Unlimited agents",

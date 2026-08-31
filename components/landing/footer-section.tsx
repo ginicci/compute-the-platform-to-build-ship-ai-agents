@@ -5,14 +5,14 @@ import { useEffect, useRef } from "react";
 
 const footerLinks = {
   Product: [
-    { name: "Agent capabilities", href: "#features" },
+    { name: "What you develop", href: "#features" },
     { name: "How it works", href: "#how-it-works" },
     { name: "Pricing", href: "#pricing" },
     { name: "Integrations", href: "#integrations" },
   ],
   Developers: [
     { name: "Documentation", href: "#developers" },
-    { name: "Agent SDK", href: "#" },
+    { name: "Northstar vision", href: "#" },
     { name: "API Reference", href: "#developers" },
     { name: "Status", href: "#" },
   ],
@@ -120,7 +120,7 @@ export function FooterSection() {
               </a>
 
               <p className="text-white/50 leading-relaxed mb-8 max-w-xs text-sm">
-                Ginicci is the AI platform for turning complex work into clear, repeatable progress.
+                Northstar by Ginicci is an ecosystem for building the businesses, careers, and partnerships that create professional growth.
               </p>
 
               {/* Social Links */}
@@ -167,13 +167,13 @@ export function FooterSection() {
         {/* Bottom Bar */}
         <div className="py-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-white/30">
-            &copy; 2025 GINICCI. All rights reserved.
+            &copy; 2026 GINICCI. All rights reserved.
           </p>
 
           <div className="flex items-center gap-4 text-sm text-white/30">
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#eca8d6]" />
-              All agents operational
+              The ecosystem is growing
             </span>
           </div>
         </div>

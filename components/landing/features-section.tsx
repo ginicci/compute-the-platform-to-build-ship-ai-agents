@@ -5,27 +5,27 @@ import { useEffect, useRef, useState } from "react";
 const features = [
   {
     number: "01",
-    title: "Autonomous Execution",
-    description: "Deploy AI agents that work independently. They analyze, decide, and execute complex multi-step tasks without human intervention.",
-    stats: { value: "99.7%", label: "task completion" },
+    title: "Business Development",
+    description: "Move a venture from idea to traction with the partners, operators, advisors, and resources that can solve your next problem.",
+    stats: { value: "01", label: "ventures to traction" },
   },
   {
     number: "02",
-    title: "Distributed Computing",
-    description: "Offload compute-heavy tasks to our global network. Your agents run on optimized infrastructure across 50+ regions worldwide.",
-    stats: { value: "50+", label: "global regions" },
+    title: "Career Development",
+    description: "Build a deliberate path with skills, mentors, sponsors, and opportunities connected to the work you want to do next.",
+    stats: { value: "02", label: "paths forward" },
   },
   {
     number: "03",
-    title: "Multi-Agent Orchestration",
-    description: "Coordinate teams of specialized agents. They communicate, delegate, and collaborate to solve complex problems together.",
-    stats: { value: "1000x", label: "parallel execution" },
+    title: "Partnerships",
+    description: "Find and structure channel, referral, co-delivery, and joint-venture relationships with people and organizations that fit.",
+    stats: { value: "03", label: "ways to collaborate" },
   },
   {
     number: "04",
-    title: "Secure Sandboxing",
-    description: "Each agent runs in isolated environments. Full audit trails, encrypted execution, and zero data leakage between tasks.",
-    stats: { value: "0", label: "data breaches" },
+    title: "Knowledge & Skills",
+    description: "Learn against an outcome with programs, playbooks, and practitioner mentorship attached to the work in front of you.",
+    stats: { value: "04", label: "ways to develop" },
   },
 ];
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 
-const words = ["moves", "adapts", "decides", "delivers"];
+const words = ["connects", "develops", "collaborates", "grows"];
 
 function BlurWord({ word, trigger }: { word: string; trigger: number }) {
   const letters = word.split("");
@@ -174,7 +174,7 @@ export function HeroSection() {
         >
           <span className="inline-flex items-center gap-3 text-sm font-mono text-white/60">
             <span className="w-8 h-px bg-white/30" />
-            The AI operating layer for modern teams
+            Northstar by Ginicci
           </span>
         </div>
         
@@ -185,9 +185,9 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <span className="block whitespace-nowrap">Work, reimagined.</span>
+            <span className="block whitespace-nowrap">Build what comes next.</span>
             <span className="block whitespace-nowrap">
-              AI that{" "}
+              An ecosystem that{" "}
               <span className="relative inline-block">
                 <BlurWord word={words[wordIndex]} trigger={wordIndex} />
               </span>

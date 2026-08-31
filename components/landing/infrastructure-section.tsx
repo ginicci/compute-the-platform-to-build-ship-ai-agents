@@ -144,10 +144,10 @@ export function InfrastructureSection() {
             <div className="relative z-10">
               <div className="flex items-baseline gap-2 mb-4">
                 <span className="text-8xl lg:text-[10rem] font-display leading-none">29</span>
-                <span className="text-2xl text-muted-foreground">regions</span>
+                <span className="text-2xl text-muted-foreground">areas of growth</span>
               </div>
               <p className="text-muted-foreground max-w-md">
-                Compute nodes distributed globally for maximum redundancy and minimum latency.
+                One connected ecosystem for the people, resources, and opportunities that move your work forward.
               </p>
             </div>
           </div>
@@ -157,15 +157,15 @@ export function InfrastructureSection() {
             <div className={`p-8 border border-foreground/10 bg-foreground/[0.02] transition-all duration-700 delay-100 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}>
-              <span className="text-5xl lg:text-6xl font-display">99.99%</span>
-              <span className="block text-sm text-muted-foreground mt-2">Uptime SLA</span>
+              <span className="text-5xl lg:text-6xl font-display">1</span>
+              <span className="block text-sm text-muted-foreground mt-2">connected ecosystem</span>
             </div>
             
             <div className={`p-8 border border-foreground/10 bg-foreground/[0.02] transition-all duration-700 delay-200 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}>
-              <span className="text-5xl lg:text-6xl font-display">&lt;50ms</span>
-              <span className="block text-sm text-muted-foreground mt-2">Global latency</span>
+              <span className="text-5xl lg:text-6xl font-display">360°</span>
+              <span className="block text-sm text-muted-foreground mt-2">view of your growth</span>
             </div>
           </div>
         </div>

@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
-  { name: "Capabilities",  href: "#features"      },
-  { name: "Process",       href: "#how-it-works"  },
-  { name: "Infra",         href: "#infra"          },
-  { name: "Integrations",  href: "#integrations"  },
-  { name: "Security",      href: "#security"      },
+  { name: "What you develop", href: "#features" },
+  { name: "The North Star", href: "#how-it-works" },
+  { name: "Ecosystem", href: "#infra" },
+  { name: "How it works", href: "#integrations" },
+  { name: "Commitments", href: "#security" },
 ];
 
 export function Navigation() {
@@ -73,7 +73,7 @@ export function Navigation() {
               size="sm"
               className={`rounded-full transition-all duration-500 ${isScrolled ? "bg-foreground hover:bg-foreground/90 text-background px-4 h-8 text-xs" : "bg-white hover:bg-white/90 text-black px-6"}`}
             >
-              Deploy agent
+              Request access
             </Button>
           </div>
 
@@ -141,7 +141,7 @@ export function Navigation() {
               className="flex-1 bg-foreground text-background rounded-full h-14 text-base"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Deploy agent
+              Request access
             </Button>
           </div>
         </div>

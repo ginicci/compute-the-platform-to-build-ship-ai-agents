@@ -21,8 +21,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Ginicci - The AI Platform for Work That Moves',
-  description: 'Build, deploy, and orchestrate intelligent AI agents that turn complex work into reliable outcomes.',
+  title: 'Northstar by Ginicci — A Business & Professional Growth Ecosystem',
+  description: 'Build your business, career, partnerships, knowledge, skills, products, services, and professional network in one connected ecosystem.',
   generator: 'v0.app',
 }
 
