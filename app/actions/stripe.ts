@@ -2,9 +2,8 @@
 
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { isOwnerEmail } from "@/lib/owner"
 import { stripe } from "@/lib/stripe"
-import { getTier, type BillingInterval } from "@/lib/tiers"
+import { getTier, isPaidTier, type BillingInterval } from "@/lib/tiers"
 
 function randomSuffix() {
   return Array.from({ length: 8 }, () =>
@@ -18,13 +17,13 @@ export async function startSubscriptionCheckout(
 ) {
   // Validate the tier and interval server-side; never trust a client price.
   const tier = getTier(tierId)
-  if (!tier) throw new Error("Invalid tier")
+  if (!tier || !isPaidTier(tier)) throw new Error("Invalid tier")
   if (interval !== "monthly" && interval !== "annual") {
     throw new Error("Invalid billing interval")
   }
 
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || !isOwnerEmail(session.user.email)) {
+  if (!session) {
     throw new Error("Unauthorized")
   }
 
@@ -57,6 +56,7 @@ export async function startSubscriptionCheckout(
       },
     ],
     subscription_data: {
+      ...(tier.trialDays > 0 ? { trial_period_days: tier.trialDays } : {}),
       metadata: {
         tierId: tier.id,
         interval,

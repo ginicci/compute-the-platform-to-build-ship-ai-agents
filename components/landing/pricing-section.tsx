@@ -1,57 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { ArrowRight, Check, Zap } from "lucide-react";
+import { TIERS, formatDollars, isPaidTier } from "@/lib/tiers";
 
-const plans = [
-  {
-    name: "Explorer",
-    description: "A focused entry point into the Northstar ecosystem",
-    price: { monthly: 0, annual: 0 },
-    features: [
-      "3 concurrent agents",
-      "1,000 tasks/month",
-      "Community support",
-      "Basic logging",
-      "Public integrations",
-    ],
-    cta: "Start free",
-    highlight: false,
-  },
-  {
-    name: "Builder",
-    description: "A deeper operating layer for active founders and professionals",
-    price: { monthly: 79, annual: 65 },
-    features: [
-      "25 concurrent agents",
-      "50,000 tasks/month",
-      "Priority support",
-      "Full audit trails",
-      "Private integrations",
-      "Team workspaces",
-      "Custom agent roles",
-    ],
-    cta: "Start trial",
-    highlight: true,
-  },
-  {
-    name: "Catalyst",
-    description: "High-touch support for ambitious ecosystem builders",
-    price: { monthly: null, annual: null },
-    features: [
-      "Unlimited agents",
-      "Unlimited tasks",
-      "24/7 dedicated support",
-      "On-premise deployment",
-      "SLA guarantee",
-      "Custom LLM routing",
-      "Advanced security",
-      "Dedicated compute",
-    ],
-    cta: "Contact sales",
-    highlight: false,
-  },
-];
+const plans = TIERS;
 
 export function PricingSection() {
   const [isAnnual, setIsAnnual] = useState(true);
@@ -104,16 +58,48 @@ export function PricingSection() {
           </div>
         </div>
 
+        {/* Billing toggle */}
+        <div className="flex flex-wrap items-center gap-4 mb-12">
+          <div
+            role="radiogroup"
+            aria-label="Billing period"
+            className="inline-flex border border-foreground/20 p-1"
+          >
+            {([
+              { value: false, label: "Monthly" },
+              { value: true, label: "Yearly" },
+            ] as const).map((option) => (
+              <button
+                key={option.label}
+                type="button"
+                role="radio"
+                aria-checked={isAnnual === option.value}
+                onClick={() => setIsAnnual(option.value)}
+                className={`min-h-11 px-5 text-sm font-medium transition-colors ${
+                  isAnnual === option.value
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            Save 20% yearly · Free trial on every paid plan
+          </span>
+        </div>
+
         {/* Pricing cards - Horizontal layout with overlap */}
         <div className="relative">
-          <div className="grid lg:grid-cols-3 gap-4 lg:gap-0">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-0">
             {plans.map((plan, index) => (
               <div
                 key={plan.name}
                 className={`relative bg-background border transition-all duration-700 ${
                   plan.highlight 
-                    ? "border-foreground lg:-mx-2 lg:z-10 lg:scale-105" 
-                    : "border-foreground/10 lg:first:-mr-2 lg:last:-ml-2"
+                    ? "border-foreground xl:z-10 xl:scale-105"
+                    : "border-foreground/10"
                 } ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"}`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
@@ -127,7 +113,7 @@ export function PricingSection() {
                   </div>
                 )}
 
-                <div className="p-8 lg:p-10">
+                <div className="p-8">
                   {/* Plan header */}
                   <div className="mb-8 pb-8 border-b border-foreground/10">
                     <span className="font-mono text-xs text-muted-foreground">
@@ -139,19 +125,22 @@ export function PricingSection() {
 
                   {/* Price */}
                   <div className="mb-8">
-                    {plan.price.monthly !== null ? (
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-5xl lg:text-6xl font-display">
-                          ${isAnnual ? plan.price.annual : plan.price.monthly}
-                        </span>
-                        <span className="text-muted-foreground text-sm">/month</span>
-                      </div>
-                    ) : (
-                      <span className="text-4xl font-display">Custom</span>
-                    )}
-                    {plan.price.monthly !== null && plan.price.monthly > 0 && (
-                      <p className="text-xs text-muted-foreground mt-2 font-mono">
-                        {isAnnual ? "billed annually" : "billed monthly"}
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl lg:text-6xl font-display">
+                        {formatDollars(plan.priceInCents[isAnnual ? "annual" : "monthly"])}
+                      </span>
+                      <span className="text-muted-foreground text-sm">/month</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2 font-mono">
+                      {!isPaidTier(plan)
+                        ? "free forever"
+                        : isAnnual
+                          ? `${formatDollars(plan.priceInCents.annual * 12)} billed yearly`
+                          : "billed monthly"}
+                    </p>
+                    {plan.trialDays > 0 && (
+                      <p className="mt-3 inline-flex border border-foreground/20 px-2 py-1 font-mono text-xs uppercase tracking-widest text-foreground">
+                        {plan.trialDays}-day free trial
                       </p>
                     )}
                   </div>
@@ -167,8 +156,13 @@ export function PricingSection() {
                   </ul>
 
                   {/* CTA */}
-                  <button
-                    className={`w-full py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all group ${
+                  <Link
+                    href={
+                      isPaidTier(plan)
+                        ? `/checkout?plan=${plan.id}&interval=${isAnnual ? "annual" : "monthly"}`
+                        : "/sign-up"
+                    }
+                    className={`w-full min-h-11 py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all group ${
                       plan.highlight
                         ? "bg-foreground text-background hover:bg-foreground/90"
                         : "border border-foreground/20 text-foreground hover:border-foreground hover:bg-foreground/5"
@@ -176,7 +170,7 @@ export function PricingSection() {
                   >
                     {plan.cta}
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))}
