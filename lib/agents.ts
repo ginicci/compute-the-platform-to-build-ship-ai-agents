@@ -99,6 +99,13 @@ export const AGENTS: Agent[] = [
 
 export const DEFAULT_AGENT_ID: AgentId = 'northstar'
 
+// Agents a plan with an agent limit gets first, in order.
+const AGENT_PRIORITY: AgentId[] = ['northstar', 'knowledge', 'business', 'marketing', 'customers', 'money', 'investing', 'markets', 'career']
+
+export function agentIdsForLimit(limit: number | null): AgentId[] {
+  return limit === null ? AGENT_PRIORITY : AGENT_PRIORITY.slice(0, limit)
+}
+
 export function getAgent(id: unknown): Agent | undefined {
   return AGENTS.find((agent) => agent.id === id)
 }

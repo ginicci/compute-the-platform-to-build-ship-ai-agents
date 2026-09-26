@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, integer, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core'
 
 // Better Auth owns this table; only the columns the app reads are declared.
 export const user = pgTable('user', {
@@ -24,3 +24,14 @@ export const subscription = pgTable('subscription', {
 })
 
 export type SubscriptionRow = typeof subscription.$inferSelect
+
+export const agentUsage = pgTable(
+  'agent_usage',
+  {
+    userId: text('userId').notNull(),
+    period: text('period').notNull(),
+    tasks: integer('tasks').notNull().default(0),
+    updatedAt: timestamp('updatedAt', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.period] })],
+)

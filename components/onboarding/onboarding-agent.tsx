@@ -3,50 +3,139 @@
 import { useEffect, useRef, useState } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
-import { ArrowDown, ArrowUp, RotateCcw, Square } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowDown, ArrowUp, Lock, RotateCcw, Square } from 'lucide-react'
 import { AGENTS, DEFAULT_AGENT_ID, getAgent, type AgentId } from '@/lib/agents'
 import { Button } from '@/components/ui/button'
 
 const transport = new DefaultChatTransport({ api: '/api/chat' })
 
-export function OnboardingAgent() {
+export type AgentPlan = {
+  name: string
+  allowedAgentIds: AgentId[]
+  tasksLimit: number | null
+  tasksUsed: number
+}
+
+function limitCode(error: Error | undefined) {
+  if (!error) return null
+  try {
+    const code = JSON.parse(error.message)?.code
+    return code === 'task_limit' || code === 'agent_locked' ? code : null
+  } catch {
+    return null
+  }
+}
+
+export function OnboardingAgent({ plan }: { plan: AgentPlan }) {
   const [agentId, setAgentId] = useState<AgentId>(DEFAULT_AGENT_ID)
+  const [tasksUsed, setTasksUsed] = useState(plan.tasksUsed)
   const agent = getAgent(agentId) ?? AGENTS[0]
+  const locked = !plan.allowedAgentIds.includes(agent.id)
+  const outOfTasks = plan.tasksLimit !== null && tasksUsed >= plan.tasksLimit
 
   return (
     <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col overflow-hidden">
       <header className="flex flex-col gap-3 border-b border-border px-4 pb-3 pt-4 sm:px-6">
         <div className="flex items-baseline justify-between gap-3">
           <h1 className="font-display text-xl tracking-tight">Northstar agents</h1>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-primary">Ginicci</p>
+          <Link href="/account" className="font-mono text-[10px] uppercase tracking-widest text-primary">
+            {`${plan.name} plan`}
+          </Link>
         </div>
+        <UsageMeter used={tasksUsed} limit={plan.tasksLimit} />
         <nav aria-label="Agent categories" className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
           <ul className="flex w-max gap-2">
-            {AGENTS.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => setAgentId(item.id)}
-                  aria-pressed={item.id === agentId}
-                  className={`min-h-11 whitespace-nowrap border px-4 text-sm transition-colors ${
-                    item.id === agentId
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border text-muted-foreground hover:border-primary/60 hover:text-foreground'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              </li>
-            ))}
+            {AGENTS.map((item) => {
+              const itemLocked = !plan.allowedAgentIds.includes(item.id)
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => setAgentId(item.id)}
+                    aria-pressed={item.id === agentId}
+                    aria-label={itemLocked ? `${item.label} (upgrade required)` : undefined}
+                    className={`flex min-h-11 items-center gap-2 whitespace-nowrap border px-4 text-sm transition-colors ${
+                      item.id === agentId
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border text-muted-foreground hover:border-primary/60 hover:text-foreground'
+                    }`}
+                  >
+                    {itemLocked && <Lock className="size-3.5" aria-hidden="true" />}
+                    {item.label}
+                  </button>
+                </li>
+              )
+            })}
           </ul>
         </nav>
       </header>
-      <AgentChat key={agent.id} agentId={agent.id} />
+      {locked ? (
+        <UpgradePanel
+          title={`${agent.name} is on paid plans`}
+          body={`Your ${plan.name} plan includes ${plan.allowedAgentIds.length} agents. Upgrade to Plus to unlock all of them, with a 14-day free trial.`}
+        />
+      ) : (
+        <AgentChat
+          key={agent.id}
+          agentId={agent.id}
+          outOfTasks={outOfTasks}
+          onSend={() => setTasksUsed((count) => count + 1)}
+        />
+      )}
     </div>
   )
 }
 
-function AgentChat({ agentId }: { agentId: AgentId }) {
+function UsageMeter({ used, limit }: { used: number; limit: number | null }) {
+  if (limit === null) {
+    return <p className="text-xs text-muted-foreground">Unlimited tasks this month</p>
+  }
+  const shown = Math.min(used, limit)
+  const percent = Math.round((shown / limit) * 100)
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>{`${shown.toLocaleString('en-US')} of ${limit.toLocaleString('en-US')} tasks this month`}</span>
+        {percent >= 80 && (
+          <Link href="/#pricing" className="text-primary underline-offset-4 hover:underline">
+            Upgrade
+          </Link>
+        )}
+      </div>
+      <div
+        role="progressbar"
+        aria-label="Monthly tasks used"
+        aria-valuemin={0}
+        aria-valuemax={limit}
+        aria-valuenow={shown}
+        className="h-1 w-full bg-muted"
+      >
+        <div className="h-full bg-primary transition-[width]" style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  )
+}
+
+function UpgradePanel({ title, body }: { title: string; body: string }) {
+  return (
+    <section className="flex flex-1 flex-col justify-center gap-4 px-4 py-8 sm:px-6">
+      <Lock className="size-6 text-primary" aria-hidden="true" />
+      <h2 className="text-balance font-display text-3xl tracking-tight">{title}</h2>
+      <p className="text-pretty text-base leading-relaxed text-muted-foreground">{body}</p>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button asChild size="lg" className="min-h-12">
+          <Link href="/checkout?tier=plus&interval=monthly">Start free trial</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline" className="min-h-12">
+          <Link href="/#pricing">Compare plans</Link>
+        </Button>
+      </div>
+    </section>
+  )
+}
+
+function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTasks: boolean; onSend: () => void }) {
   const agent = getAgent(agentId) ?? AGENTS[0]
   const [input, setInput] = useState('')
   const [showJump, setShowJump] = useState(false)
@@ -55,6 +144,8 @@ function AgentChat({ agentId }: { agentId: AgentId }) {
   const { messages, sendMessage, status, stop, error, regenerate } = useChat({ id: agentId, transport })
 
   const busy = status === 'submitted' || status === 'streaming'
+  const errorCode = limitCode(error)
+  const blocked = outOfTasks || errorCode === 'task_limit'
 
   const scrollToBottom = (smooth = false) => {
     const el = scrollRef.current
@@ -76,7 +167,8 @@ function AgentChat({ agentId }: { agentId: AgentId }) {
 
   const send = (text: string) => {
     const trimmed = text.trim()
-    if (!trimmed || busy) return
+    if (!trimmed || busy || blocked) return
+    onSend()
     pinnedRef.current = true
     setShowJump(false)
     sendMessage({ text: trimmed }, { body: { agentId } })
@@ -142,10 +234,26 @@ function AgentChat({ agentId }: { agentId: AgentId }) {
           </p>
         )}
 
-        {error && (
+        {blocked && (
+          <div role="alert" className="flex flex-col gap-3 border border-primary/50 px-4 py-4 text-sm leading-relaxed text-foreground">
+            <p>{"You've used all your tasks for this month. Upgrade to keep going, or wait until next month when your tasks reset."}</p>
+            <Button asChild className="min-h-11 self-start">
+              <Link href="/#pricing">See plans</Link>
+            </Button>
+          </div>
+        )}
+
+        {error && !errorCode && (
           <div role="alert" className="flex items-center justify-between gap-3 border border-destructive/50 px-4 py-3 text-sm text-foreground">
             <span>{'Something went wrong. Please try again.'}</span>
-            <Button size="sm" variant="outline" onClick={() => regenerate({ body: { agentId } })}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                onSend()
+                regenerate({ body: { agentId } })
+              }}
+            >
               <RotateCcw aria-hidden="true" />
               Retry
             </Button>
@@ -187,7 +295,8 @@ function AgentChat({ agentId }: { agentId: AgentId }) {
               send(input)
             }
           }}
-          placeholder={`Ask ${agent.name}...`}
+          disabled={blocked}
+          placeholder={blocked ? 'Monthly task limit reached' : `Ask ${agent.name}...`}
           className="max-h-40 min-h-12 flex-1 resize-none bg-card px-4 py-3 text-base leading-relaxed text-foreground outline-none ring-1 ring-border placeholder:text-muted-foreground focus:ring-primary"
         />
         {busy ? (
@@ -195,7 +304,7 @@ function AgentChat({ agentId }: { agentId: AgentId }) {
             <Square aria-hidden="true" />
           </Button>
         ) : (
-          <Button type="submit" size="icon" className="size-12" disabled={!input.trim()} aria-label="Send message">
+          <Button type="submit" size="icon" className="size-12" disabled={!input.trim() || blocked} aria-label="Send message">
             <ArrowUp aria-hidden="true" />
           </Button>
         )}

@@ -11,6 +11,8 @@ export interface Tier {
   // Price in cents per month for each billing interval (annual is the per-month equivalent).
   priceInCents: Record<BillingInterval, number>
   trialDays: number
+  // null means unlimited. Enforced server-side in lib/plan-limits.ts.
+  limits: { agents: number | null; tasksPerMonth: number | null }
   features: string[]
   cta: string
   highlight: boolean
@@ -23,6 +25,7 @@ export const TIERS: Tier[] = [
     description: "Try Northstar and see what your agents can do",
     priceInCents: { monthly: 0, annual: 0 },
     trialDays: 0,
+    limits: { agents: 3, tasksPerMonth: 1000 },
     features: [
       "3 concurrent agents",
       "1,000 tasks per month",
@@ -40,6 +43,7 @@ export const TIERS: Tier[] = [
     description: "For founders and professionals building every day",
     priceInCents: { monthly: 2000, annual: 1600 },
     trialDays: 14,
+    limits: { agents: 25, tasksPerMonth: 50000 },
     features: [
       "25 concurrent agents",
       "50,000 tasks per month",
@@ -59,6 +63,7 @@ export const TIERS: Tier[] = [
     description: "For growing teams running agents across the business",
     priceInCents: { monthly: 6000, annual: 4800 },
     trialDays: 14,
+    limits: { agents: 100, tasksPerMonth: 250000 },
     features: [
       "100 concurrent agents",
       "250,000 tasks per month",
@@ -77,6 +82,7 @@ export const TIERS: Tier[] = [
     description: "Maximum power for serious ecosystem builders",
     priceInCents: { monthly: 20000, annual: 16000 },
     trialDays: 7,
+    limits: { agents: null, tasksPerMonth: null },
     features: [
       "Unlimited agents",
       "Unlimited tasks",
