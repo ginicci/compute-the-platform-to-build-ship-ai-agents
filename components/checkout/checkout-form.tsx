@@ -7,6 +7,7 @@ import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe
 import { Check } from "lucide-react"
 import { confirmCheckout } from "@/app/actions/billing"
 import { startSubscriptionCheckout } from "@/app/actions/stripe"
+import { TermsCheckbox } from "@/components/legal/terms-checkbox"
 import type { BillingInterval } from "@/lib/tiers"
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string)
@@ -19,10 +20,12 @@ export function CheckoutForm({
   interval: BillingInterval
 }) {
   const [isComplete, setIsComplete] = useState(false)
+  const [agreed, setAgreed] = useState(false)
+  const [confirmed, setConfirmed] = useState(false)
   const sessionIdRef = useRef<string | null>(null)
 
   const fetchClientSecret = useCallback(async () => {
-    const { clientSecret, sessionId } = await startSubscriptionCheckout(tierId, interval)
+    const { clientSecret, sessionId } = await startSubscriptionCheckout(tierId, interval, true)
     if (!clientSecret) throw new Error("Could not start checkout")
     sessionIdRef.current = sessionId
     return clientSecret
@@ -63,6 +66,27 @@ export function CheckoutForm({
             View your plan
           </Link>
         </div>
+      </div>
+    )
+  }
+
+  if (!confirmed) {
+    return (
+      <div className="flex flex-col gap-5 border border-foreground/10 p-6">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Your plan renews automatically until you cancel. You can cancel anytime from your account page and keep
+          access until the end of the period you&apos;ve paid for. Paid periods aren&apos;t refundable once they
+          start, so use your free trial to try it out.
+        </p>
+        <TermsCheckbox id="checkout-terms" checked={agreed} onChange={setAgreed} />
+        <button
+          type="button"
+          disabled={!agreed}
+          onClick={() => setConfirmed(true)}
+          className="inline-flex min-h-11 items-center justify-center bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Continue to payment
+        </button>
       </div>
     )
   }

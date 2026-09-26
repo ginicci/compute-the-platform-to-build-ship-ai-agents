@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { count, desc, eq } from 'drizzle-orm'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Download } from 'lucide-react'
 import { db } from '@/lib/db'
 import { subscription, user } from '@/lib/db-schema'
 import { requireOwner } from '@/lib/owner'
@@ -27,6 +27,7 @@ export default async function AdminPage() {
     db
       .select({
         id: subscription.id,
+        userId: subscription.userId,
         tierId: subscription.tierId,
         interval: subscription.interval,
         status: subscription.status,
@@ -115,6 +116,14 @@ export default async function AdminPage() {
                     {row.interval === 'annual' ? 'yr' : 'mo'} ·{' '}
                     {row.cancelAtPeriodEnd ? 'ends' : 'renews'} {formatDate(row.currentPeriodEnd)}
                   </p>
+                  <a
+                    href={`/admin/records/${row.userId}`}
+                    download
+                    className="inline-flex min-h-11 items-center gap-2 self-start text-sm text-foreground underline underline-offset-4"
+                  >
+                    <Download className="size-4" aria-hidden="true" />
+                    Download records
+                  </a>
                 </li>
               ))}
             </ul>
