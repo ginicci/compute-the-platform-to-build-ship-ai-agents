@@ -1,5 +1,6 @@
 import { convertToModelMessages, streamText } from 'ai'
 import { getAgent, systemPromptFor } from '@/lib/agents'
+import { consumeTask, getPlanContext } from '@/lib/plan-limits'
 import { getUserSession } from '@/lib/session'
 
 const MAX_MESSAGES = 60
@@ -7,7 +8,8 @@ const MAX_MESSAGES = 60
 export const maxDuration = 60
 
 export async function POST(request: Request) {
-  if (!(await getUserSession())) {
+  const session = await getUserSession()
+  if (!session?.user) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -20,6 +22,15 @@ export async function POST(request: Request) {
   const agent = getAgent(body?.agentId)
   if (!agent) {
     return Response.json({ error: 'Unknown agent' }, { status: 400 })
+  }
+
+  const plan = await getPlanContext(session.user)
+  if (!plan.allowedAgentIds.includes(agent.id)) {
+    return Response.json({ error: 'Upgrade to use this agent', code: 'agent_locked' }, { status: 403 })
+  }
+
+  if (!(await consumeTask(session.user.id, plan.period, plan.tasksLimit))) {
+    return Response.json({ error: 'Monthly task limit reached', code: 'task_limit' }, { status: 429 })
   }
 
   const result = streamText({
