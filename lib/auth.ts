@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { Pool } from 'pg'
+import { sendOwnerAlert } from '@/lib/owner-alerts'
 
 const originValues = [
   process.env.V0_RUNTIME_URL,
@@ -28,6 +29,15 @@ export const auth = betterAuth({
     customRules: {
       '/sign-in/email': { window: 60, max: 5 },
       '/sign-up/email': { window: 60, max: 3 },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          await sendOwnerAlert('New sign-up', [`Email: ${user.email}`, `Name: ${user.name || '(none)'}`])
+        },
+      },
     },
   },
   baseURL: process.env.BETTER_AUTH_URL || originValues[0],
