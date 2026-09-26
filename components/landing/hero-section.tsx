@@ -185,10 +185,10 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <span className="block whitespace-nowrap">Build what comes next.</span>
-            <span className="block whitespace-nowrap">
+            <span className="block text-balance sm:whitespace-nowrap">Build what comes next.</span>
+            <span className="block sm:whitespace-nowrap">
               An ecosystem that{" "}
-              <span className="relative inline-block">
+              <span className="relative block sm:inline-block">
                 <BlurWord word={words[wordIndex]} trigger={wordIndex} />
               </span>
             </span>
