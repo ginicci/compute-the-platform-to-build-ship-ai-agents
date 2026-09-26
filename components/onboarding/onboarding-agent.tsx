@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import Link from 'next/link'
-import { ArrowDown, ArrowUp, Lock, RotateCcw, Square } from 'lucide-react'
+import { ArrowDown, ArrowUp, Loader2, Lock, Mic, RotateCcw, Square, Volume2 } from 'lucide-react'
 import { AGENTS, DEFAULT_AGENT_ID, getAgent, type AgentId } from '@/lib/agents'
 import { Button } from '@/components/ui/button'
+import { useReadAloud, useVoiceInput } from '@/components/onboarding/use-voice'
 
 const transport = new DefaultChatTransport({ api: '/api/chat' })
 
@@ -143,9 +144,26 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
   const pinnedRef = useRef(true)
   const { messages, sendMessage, status, stop, error, regenerate } = useChat({ id: agentId, transport })
 
+  const [voiceLimited, setVoiceLimited] = useState(false)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+
   const busy = status === 'submitted' || status === 'streaming'
   const errorCode = limitCode(error)
-  const blocked = outOfTasks || errorCode === 'task_limit'
+  const blocked = outOfTasks || voiceLimited || errorCode === 'task_limit'
+
+  const voice = useVoiceInput({
+    agentId,
+    onTaskUsed: onSend,
+    onLimit: () => setVoiceLimited(true),
+    onText: (text) => {
+      setInput((current) => (current.trim() ? `${current.trimEnd()} ${text}` : text))
+      requestAnimationFrame(() => inputRef.current?.focus())
+    },
+  })
+  const readAloud = useReadAloud({ agentId, onTaskUsed: onSend, onLimit: () => setVoiceLimited(true) })
+  const voiceError = voice.error ?? readAloud.error
+  const recording = voice.status === 'recording'
+  const transcribing = voice.status === 'transcribing'
 
   const scrollToBottom = (smooth = false) => {
     const el = scrollRef.current
@@ -207,7 +225,8 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
           </div>
         )}
 
-        {messages.map((message) => {
+        {messages.map((message, index) => {
+          const stillWriting = busy && index === messages.length - 1
           const text = message.parts
             .filter((part) => part.type === 'text')
             .map((part) => part.text)
@@ -223,6 +242,25 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
             <div key={message.id} className="flex flex-col gap-1">
               <p className="font-mono text-[10px] uppercase tracking-widest text-primary">{agent.name}</p>
               <p className="whitespace-pre-wrap text-base leading-relaxed text-foreground">{text}</p>
+              {text && !stillWriting && (
+                <button
+                  type="button"
+                  onClick={() => readAloud.toggle(message.id, text)}
+                  disabled={readAloud.loadingId === message.id || (blocked && readAloud.activeId !== message.id)}
+                  aria-label={readAloud.activeId === message.id ? 'Stop reading aloud' : 'Read reply aloud'}
+                  aria-pressed={readAloud.activeId === message.id}
+                  className="-ml-3 flex min-h-11 items-center gap-2 self-start px-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-colors hover:text-primary disabled:opacity-50"
+                >
+                  {readAloud.loadingId === message.id ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  ) : readAloud.activeId === message.id ? (
+                    <Square className="size-4 text-primary" aria-hidden="true" />
+                  ) : (
+                    <Volume2 className="size-4" aria-hidden="true" />
+                  )}
+                  {readAloud.loadingId === message.id ? 'Loading' : readAloud.activeId === message.id ? 'Stop' : 'Listen'}
+                </button>
+              )}
             </div>
           )
         })}
@@ -276,15 +314,55 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
       )}
       </div>
 
+      <div className="flex flex-col border-t border-border bg-background">
+      {voiceError && (
+        <div role="alert" className="flex items-start justify-between gap-3 px-4 pt-3 text-sm leading-relaxed text-foreground sm:px-6">
+          <span>{voiceError}</span>
+          <button
+            type="button"
+            onClick={() => {
+              voice.clearError()
+              readAloud.clearError()
+            }}
+            className="min-h-11 shrink-0 px-2 text-xs text-muted-foreground underline-offset-4 hover:underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+      <p className="sr-only" aria-live="assertive">
+        {recording ? 'Recording. Tap the stop button when you are done.' : transcribing ? 'Turning your voice into text.' : ''}
+      </p>
       <form
         onSubmit={(event) => {
           event.preventDefault()
           send(input)
         }}
-        className="flex items-end gap-2 border-t border-border bg-background px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6"
+        className="flex items-end gap-2 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6"
       >
+        {voice.supported && (
+          <Button
+            type="button"
+            size="icon"
+            variant={recording ? 'default' : 'outline'}
+            className={`size-12 shrink-0 ${recording ? 'animate-pulse' : ''}`}
+            onClick={() => (recording ? voice.stop() : voice.start())}
+            disabled={blocked || transcribing}
+            aria-label={recording ? 'Stop recording' : transcribing ? 'Transcribing' : 'Speak your message'}
+            aria-pressed={recording}
+          >
+            {transcribing ? (
+              <Loader2 className="animate-spin" aria-hidden="true" />
+            ) : recording ? (
+              <Square aria-hidden="true" />
+            ) : (
+              <Mic aria-hidden="true" />
+            )}
+          </Button>
+        )}
         <label htmlFor="agent-input" className="sr-only">{`Message ${agent.name}`}</label>
         <textarea
+          ref={inputRef}
           id="agent-input"
           rows={1}
           value={input}
@@ -296,8 +374,16 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
             }
           }}
           disabled={blocked}
-          placeholder={blocked ? 'Monthly task limit reached' : `Ask ${agent.name}...`}
-          className="max-h-40 min-h-12 flex-1 resize-none bg-card px-4 py-3 text-base leading-relaxed text-foreground outline-none ring-1 ring-border placeholder:text-muted-foreground focus:ring-primary"
+          placeholder={
+            blocked
+              ? 'Monthly task limit reached'
+              : recording
+                ? 'Listening... tap stop when done'
+                : transcribing
+                  ? 'Turning your voice into text...'
+                  : `Ask ${agent.name}...`
+          }
+          className="max-h-40 min-h-12 min-w-0 flex-1 resize-none bg-card px-4 py-3 text-base leading-relaxed text-foreground outline-none ring-1 ring-border placeholder:text-muted-foreground focus:ring-primary"
         />
         {busy ? (
           <Button type="button" size="icon" className="size-12" onClick={() => stop()} aria-label="Stop reply">
@@ -309,6 +395,7 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
           </Button>
         )}
       </form>
+      </div>
     </>
   )
 }
