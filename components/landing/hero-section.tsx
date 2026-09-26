@@ -194,6 +194,30 @@ export function HeroSection() {
             </span>
           </h1>
         </div>
+
+        <div
+          className={`flex flex-col items-start gap-4 transition-all duration-700 delay-300 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          }`}
+        >
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href="/sign-up"
+              className="inline-flex h-12 min-w-[44px] items-center justify-center rounded-full bg-white px-6 text-base font-medium text-black transition-colors hover:bg-white/90"
+            >
+              Start free
+            </a>
+            <a
+              href="#pricing"
+              className="inline-flex h-12 min-w-[44px] items-center justify-center rounded-full border border-white/30 px-6 text-base text-white transition-colors hover:bg-white/10"
+            >
+              See pricing
+            </a>
+          </div>
+          <p className="text-sm font-mono text-white/60 text-pretty">
+            Free plan available · Plus $20/mo · 14-day free trial
+          </p>
+        </div>
         </div>
       </div>
       
