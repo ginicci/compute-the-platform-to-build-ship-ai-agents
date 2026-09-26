@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { Pool } from 'pg'
 import { sendVerificationEmail } from '@/lib/email'
+import { notifyOwner } from '@/lib/owner-alerts'
 
 const originValues = [
   process.env.V0_RUNTIME_URL,
@@ -23,6 +24,16 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     sendOnSignIn: true,
     sendVerificationEmail: async ({ user, url }) => sendVerificationEmail({ to: user.email, verificationUrl: url }),
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => notifyOwner({
+          subject: 'New customer sign-up',
+          text: `A new Northstar account was created for ${user.email}.`,
+        }),
+      },
+    },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7,
