@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { CheckoutForm } from '@/components/checkout/checkout-form'
 import { getUserSession } from '@/lib/session'
+import { getLatestSubscription, hasAccess } from '@/lib/subscriptions'
 import { formatDollars, getTier, isPaidTier, type BillingInterval } from '@/lib/tiers'
 
 export const metadata: Metadata = {
@@ -20,7 +21,11 @@ export default async function CheckoutPage({
   const tier = plan ? getTier(plan) : undefined
   if (!tier || !isPaidTier(tier)) redirect('/#pricing')
 
-  if (!(await getUserSession())) redirect('/sign-up')
+  const session = await getUserSession()
+  if (!session) redirect('/sign-up')
+
+  const existing = await getLatestSubscription(session.user.id)
+  if (existing && hasAccess(existing.status)) redirect('/account')
 
   const interval: BillingInterval = rawInterval === 'monthly' ? 'monthly' : 'annual'
   const perMonth = formatDollars(tier.priceInCents[interval])

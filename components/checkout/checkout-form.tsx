@@ -1,10 +1,11 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import Link from "next/link"
 import { loadStripe } from "@stripe/stripe-js"
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js"
 import { Check } from "lucide-react"
+import { confirmCheckout } from "@/app/actions/billing"
 import { startSubscriptionCheckout } from "@/app/actions/stripe"
 import type { BillingInterval } from "@/lib/tiers"
 
@@ -18,12 +19,25 @@ export function CheckoutForm({
   interval: BillingInterval
 }) {
   const [isComplete, setIsComplete] = useState(false)
+  const sessionIdRef = useRef<string | null>(null)
 
   const fetchClientSecret = useCallback(async () => {
-    const clientSecret = await startSubscriptionCheckout(tierId, interval)
+    const { clientSecret, sessionId } = await startSubscriptionCheckout(tierId, interval)
     if (!clientSecret) throw new Error("Could not start checkout")
+    sessionIdRef.current = sessionId
     return clientSecret
   }, [tierId, interval])
+
+  const handleComplete = useCallback(async () => {
+    setIsComplete(true)
+    if (!sessionIdRef.current) return
+    try {
+      await confirmCheckout(sessionIdRef.current)
+    } catch (error) {
+      // The Stripe webhook records the plan as a backup.
+      console.error("Could not confirm checkout", error)
+    }
+  }, [])
 
   if (isComplete) {
     return (
@@ -33,14 +47,22 @@ export function CheckoutForm({
         </span>
         <h2 className="font-display text-2xl">{"You're subscribed."}</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Your payment went through. A receipt is on its way to your inbox.
+          Your plan is active. A receipt is on its way to your inbox.
         </p>
-        <Link
-          href="/onboarding"
-          className="inline-flex min-h-11 items-center bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
-        >
-          Continue to Northstar
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/onboarding"
+            className="inline-flex min-h-11 items-center bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+          >
+            Continue to Northstar
+          </Link>
+          <Link
+            href="/account"
+            className="inline-flex min-h-11 items-center border border-foreground/20 px-5 text-sm font-medium transition-colors hover:bg-foreground/5"
+          >
+            View your plan
+          </Link>
+        </div>
       </div>
     )
   }
@@ -49,7 +71,7 @@ export function CheckoutForm({
     <div id="checkout" className="overflow-hidden rounded-md">
       <EmbeddedCheckoutProvider
         stripe={stripePromise}
-        options={{ fetchClientSecret, onComplete: () => setIsComplete(true) }}
+        options={{ fetchClientSecret, onComplete: handleComplete }}
       >
         <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>
