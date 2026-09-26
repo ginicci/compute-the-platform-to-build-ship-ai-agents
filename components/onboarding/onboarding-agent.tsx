@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
-import { ArrowUp, RotateCcw, Square } from 'lucide-react'
+import { ArrowDown, ArrowUp, RotateCcw, Square } from 'lucide-react'
 import { AGENTS, DEFAULT_AGENT_ID, getAgent, type AgentId } from '@/lib/agents'
 import { Button } from '@/components/ui/button'
 
@@ -14,7 +14,7 @@ export function OnboardingAgent() {
   const agent = getAgent(agentId) ?? AGENTS[0]
 
   return (
-    <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col">
+    <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col overflow-hidden">
       <header className="flex flex-col gap-3 border-b border-border px-4 pb-3 pt-4 sm:px-6">
         <div className="flex items-baseline justify-between gap-3">
           <h1 className="font-display text-xl tracking-tight">Northstar agents</h1>
@@ -49,25 +49,50 @@ export function OnboardingAgent() {
 function AgentChat({ agentId }: { agentId: AgentId }) {
   const agent = getAgent(agentId) ?? AGENTS[0]
   const [input, setInput] = useState('')
-  const endRef = useRef<HTMLDivElement>(null)
+  const [showJump, setShowJump] = useState(false)
+  const scrollRef = useRef<HTMLElement>(null)
+  const pinnedRef = useRef(true)
   const { messages, sendMessage, status, stop, error, regenerate } = useChat({ id: agentId, transport })
 
   const busy = status === 'submitted' || status === 'streaming'
 
+  const scrollToBottom = (smooth = false) => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
+  }
+
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' })
-  }, [messages, status])
+    if (pinnedRef.current) scrollToBottom()
+  }, [messages, status, error])
+
+  const handleScroll = () => {
+    const el = scrollRef.current
+    if (!el) return
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+    pinnedRef.current = nearBottom
+    setShowJump(!nearBottom)
+  }
 
   const send = (text: string) => {
     const trimmed = text.trim()
     if (!trimmed || busy) return
+    pinnedRef.current = true
+    setShowJump(false)
     sendMessage({ text: trimmed }, { body: { agentId } })
     setInput('')
+    requestAnimationFrame(() => scrollToBottom())
   }
 
   return (
     <>
-      <section aria-live="polite" className="flex flex-1 flex-col gap-5 overflow-y-auto px-4 py-6 sm:px-6">
+      <div className="relative flex min-h-0 flex-1 flex-col">
+      <section
+        ref={scrollRef}
+        onScroll={handleScroll}
+        aria-live="polite"
+        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6"
+      >
         {messages.length === 0 && (
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
@@ -126,8 +151,22 @@ function AgentChat({ agentId }: { agentId: AgentId }) {
             </Button>
           </div>
         )}
-        <div ref={endRef} />
       </section>
+      {showJump && (
+        <button
+          type="button"
+          onClick={() => {
+            pinnedRef.current = true
+            setShowJump(false)
+            scrollToBottom(true)
+          }}
+          className="absolute bottom-3 left-1/2 flex min-h-11 -translate-x-1/2 items-center gap-2 border border-primary bg-background px-4 text-sm text-foreground shadow-lg"
+        >
+          <ArrowDown className="size-4" aria-hidden="true" />
+          Jump to latest
+        </button>
+      )}
+      </div>
 
       <form
         onSubmit={(event) => {
