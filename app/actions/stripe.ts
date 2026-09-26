@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
+import { recordConsent, TERMS_VERSION } from "@/lib/legal"
 import { stripe } from "@/lib/stripe"
 import { getLatestSubscription, hasAccess } from "@/lib/subscriptions"
 import { getTier, isPaidTier, type BillingInterval } from "@/lib/tiers"
@@ -15,7 +16,11 @@ function randomSuffix() {
 export async function startSubscriptionCheckout(
   tierId: string,
   interval: BillingInterval,
+  acceptedTerms: boolean,
 ) {
+  if (acceptedTerms !== true) {
+    throw new Error("Please agree to the Terms and Refund Policy to continue.")
+  }
   // Validate the tier and interval server-side; never trust a client price.
   const tier = getTier(tierId)
   if (!tier || !isPaidTier(tier)) throw new Error("Invalid tier")
@@ -40,6 +45,13 @@ export async function startSubscriptionCheckout(
     interval === "annual"
       ? tier.priceInCents.annual * 12
       : tier.priceInCents.monthly
+
+  await recordConsent(
+    session.user.id,
+    "checkout",
+    JSON.stringify({ tierId: tier.id, interval, unitAmount, trialDays }),
+  )
+  const termsAcceptedAt = new Date().toISOString()
 
   const checkout = await stripe.checkout.sessions.create({
     ui_mode: "embedded_page",
@@ -68,13 +80,17 @@ export async function startSubscriptionCheckout(
       metadata: {
         tierId: tier.id,
         interval,
-        ...(session?.user?.id ? { userId: session.user.id } : {}),
+        userId: session.user.id,
+        termsVersion: TERMS_VERSION,
+        termsAcceptedAt,
       },
     },
     metadata: {
       tierId: tier.id,
       interval,
-      ...(session?.user?.id ? { userId: session.user.id } : {}),
+      userId: session.user.id,
+      termsVersion: TERMS_VERSION,
+      termsAcceptedAt,
     },
   })
 

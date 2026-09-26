@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { Pool } from 'pg'
+import { logActivity } from '@/lib/legal'
 import { sendOwnerAlert } from '@/lib/owner-alerts'
 
 const originValues = [
@@ -36,6 +37,18 @@ export const auth = betterAuth({
       create: {
         after: async (user) => {
           await sendOwnerAlert('New sign-up', [`Email: ${user.email}`, `Name: ${user.name || '(none)'}`])
+        },
+      },
+    },
+    session: {
+      create: {
+        after: async (session) => {
+          await logActivity({
+            userId: session.userId,
+            event: 'sign_in',
+            ipAddress: session.ipAddress,
+            userAgent: session.userAgent,
+          })
         },
       },
     },

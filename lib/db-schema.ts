@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core'
+import { bigserial, boolean, integer, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core'
 
 // Better Auth owns this table; only the columns the app reads are declared.
 export const user = pgTable('user', {
@@ -35,3 +35,25 @@ export const agentUsage = pgTable(
   },
   (table) => [primaryKey({ columns: [table.userId, table.period] })],
 )
+
+export const legalConsent = pgTable('legal_consent', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: text('userId').notNull(),
+  termsVersion: text('termsVersion').notNull(),
+  context: text('context').notNull(),
+  detail: text('detail'),
+  ipAddress: text('ipAddress'),
+  userAgent: text('userAgent'),
+  createdAt: timestamp('createdAt', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const activityLog = pgTable('activity_log', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: text('userId').notNull(),
+  event: text('event').notNull(),
+  agentId: text('agentId'),
+  detail: text('detail'),
+  ipAddress: text('ipAddress'),
+  userAgent: text('userAgent'),
+  createdAt: timestamp('createdAt', { withTimezone: true }).notNull().defaultNow(),
+})
