@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
+import { isOwnerEmail } from "@/lib/owner"
 import { stripe } from "@/lib/stripe"
 import { getTier, type BillingInterval } from "@/lib/tiers"
 
@@ -23,6 +24,9 @@ export async function startSubscriptionCheckout(
   }
 
   const session = await auth.api.getSession({ headers: await headers() })
+  if (!session || !isOwnerEmail(session.user.email)) {
+    throw new Error("Unauthorized")
+  }
 
   // `annual` cents are the per-month equivalent; bill the full year up front.
   const unitAmount =
