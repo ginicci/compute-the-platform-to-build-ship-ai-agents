@@ -204,3 +204,15 @@
     100% { background-position: 0% 50%; }
   }
 }
+
+/* Hide untranslated text briefly on first paint; always reveal after 2s even without JS. */
+html[data-i18n-pending] body {
+  opacity: 0;
+  animation: i18n-reveal 0s linear 2s forwards;
+}
+
+@keyframes i18n-reveal {
+  to {
+    opacity: 1;
+  }
+}

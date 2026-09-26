@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import { LanguagePicker } from "@/components/i18n/language-picker";
 
 const navLinks = [
   { name: "What you develop", href: "#features" },
@@ -66,6 +67,7 @@ export function Navigation() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
+            <LanguagePicker tone={isScrolled ? "dark" : "light"} />
             <a href="/sign-in" className={`transition-all duration-500 ${isScrolled ? "text-xs text-foreground/70 hover:text-foreground" : "text-sm text-white/70 hover:text-white"}`}>
               Sign in
             </a>
@@ -122,6 +124,8 @@ export function Navigation() {
             ))}
           </div>
           
+          <LanguagePicker className="mb-6 self-start" />
+
           {/* Bottom CTAs */}
           <div className={`flex gap-4 pt-8 border-t border-foreground/10 transition-all duration-500 ${
             isMobileMenuOpen 

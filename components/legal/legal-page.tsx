@@ -51,6 +51,10 @@ export function LegalPage({
               </Link>
             ))}
           </nav>
+          <p className="hidden text-sm leading-relaxed text-muted-foreground [html:not([lang=en])_&]:block">
+            This page was translated automatically. The English version is the official version and applies if the two
+            ever differ.
+          </p>
         </header>
 
         <article className="flex flex-col gap-8 text-base leading-relaxed text-muted-foreground [&_h2]:font-display [&_h2]:text-xl [&_h2]:text-foreground [&_li]:pl-1 [&_section]:flex [&_section]:flex-col [&_section]:gap-3 [&_strong]:text-foreground [&_ul]:flex [&_ul]:list-disc [&_ul]:flex-col [&_ul]:gap-2 [&_ul]:pl-5">
