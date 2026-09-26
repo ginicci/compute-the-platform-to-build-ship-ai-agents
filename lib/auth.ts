@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { Pool } from 'pg'
+import { sendVerificationEmail } from '@/lib/email'
 
 const originValues = [
   process.env.V0_RUNTIME_URL,
@@ -16,6 +17,12 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 12,
     maxPasswordLength: 128,
+    requireEmailVerification: true,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    sendVerificationEmail: async ({ user, url }) => sendVerificationEmail({ to: user.email, verificationUrl: url }),
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7,
