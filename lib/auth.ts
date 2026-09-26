@@ -4,6 +4,8 @@ import { logActivity } from '@/lib/legal'
 import { sendOwnerAlert } from '@/lib/owner-alerts'
 
 const originValues = [
+  'https://ginicci.app',
+  'https://www.ginicci.app',
   process.env.V0_RUNTIME_URL,
   process.env.V0_DEV_APP_URL,
   process.env.V0_BUILD_URL,
