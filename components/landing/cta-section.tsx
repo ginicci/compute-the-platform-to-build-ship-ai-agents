@@ -57,28 +57,32 @@ export function CtaSection() {
                 </h2>
 
                 <p className="text-xl text-muted-foreground mb-12 leading-relaxed max-w-xl">
-                  Northstar is for people and organizations building what comes next. Request access and find the people, knowledge, and opportunities that move you forward.
+                  Northstar is for people and organizations building what comes next. Start free today and get agents for investing, customers, marketing, careers, and more.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-start gap-4">
                   <Button
+                    asChild
                     size="lg"
                     className="bg-foreground hover:bg-foreground/90 text-background px-8 h-14 text-base rounded-full group"
                   >
-                    Request access to Northstar
-                    <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                    <a href="/sign-up">
+                      Start your free trial
+                      <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                    </a>
                   </Button>
                   <Button
+                    asChild
                     size="lg"
                     variant="outline"
                     className="h-14 px-8 text-base rounded-full border-foreground/20 hover:bg-foreground/5"
                   >
-                    Book a demo
+                    <a href="#pricing">Compare plans</a>
                   </Button>
                 </div>
 
                 <p className="text-sm text-muted-foreground mt-8 font-mono">
-                  Start free with Ginicci
+                  Free plan forever · 14-day trial on Plus and Team · Cancel anytime
                 </p>
               </div>
 
