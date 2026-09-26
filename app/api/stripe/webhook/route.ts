@@ -1,6 +1,7 @@
 import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { syncSubscription } from '@/lib/subscriptions'
+import { notifyOwner } from '@/lib/owner-alerts'
 
 export const runtime = 'nodejs'
 
@@ -23,7 +24,11 @@ export async function POST(request: Request) {
       case 'checkout.session.completed': {
         const subscriptionId = event.data.object.subscription
         if (subscriptionId) {
-          await syncSubscription(typeof subscriptionId === 'string' ? subscriptionId : subscriptionId.id)
+          const synced = await syncSubscription(typeof subscriptionId === 'string' ? subscriptionId : subscriptionId.id)
+          await notifyOwner({
+            subject: 'Checkout completed',
+            text: `A customer checkout completed${synced ? ` for the ${synced.tierId} plan (${synced.status}).` : '.'}`,
+          })
         }
         break
       }
@@ -32,7 +37,13 @@ export async function POST(request: Request) {
       case 'customer.subscription.deleted':
       case 'customer.subscription.paused':
       case 'customer.subscription.resumed':
-        await syncSubscription(event.data.object.id)
+        const synced = await syncSubscription(event.data.object.id)
+        await notifyOwner({
+          subject: `Subscription ${event.type.replace('customer.subscription.', '')}`,
+          text: synced
+            ? `A subscription changed to ${synced.status} on the ${synced.tierId} plan.`
+            : `Stripe sent ${event.type} for a subscription without recognized Northstar metadata.`,
+        })
         break
     }
   } catch (error) {

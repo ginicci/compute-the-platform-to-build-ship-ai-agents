@@ -31,3 +31,10 @@ To learn more, take a look at the following resources:
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 - [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+
+## Transactional email
+
+Account verification uses the [Resend email API](https://resend.com/docs/api-reference/emails/send-email). Configure these Vercel environment variables for Production, Preview, and Development before enabling sign-up:
+
+- `RESEND_API_KEY`: Resend API key with permission to send email.
+- `EMAIL_FROM`: a sender address from a verified Resend domain, such as `Northstar <accounts@your-domain.com>`.
