@@ -4,5 +4,5 @@ import { getUserSession } from '@/lib/session'
 
 export default async function OnboardingPage() {
   if (!(await getUserSession())) redirect('/sign-in')
-  return <main className="min-h-screen bg-background"><OnboardingAgent /></main>
+  return <main className="h-dvh overflow-hidden bg-background"><OnboardingAgent /></main>
 }

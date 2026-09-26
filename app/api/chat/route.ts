@@ -1,7 +1,10 @@
 import { convertToModelMessages, streamText } from 'ai'
+import { getAgent, systemPromptFor } from '@/lib/agents'
 import { getUserSession } from '@/lib/session'
 
 const MAX_MESSAGES = 60
+
+export const maxDuration = 60
 
 export async function POST(request: Request) {
   if (!(await getUserSession())) {
@@ -14,11 +17,17 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Invalid request' }, { status: 400 })
   }
 
+  const agent = getAgent(body?.agentId)
+  if (!agent) {
+    return Response.json({ error: 'Unknown agent' }, { status: 400 })
+  }
+
   const result = streamText({
-    model: 'openai/gpt-5',
-    system: `You are Northstar, Ginicci's thoughtful onboarding guide. Help a founder or professional clarify where they are going and what support they need. Ask one focused question at a time. Learn their role, current situation, desired outcome, strengths, constraints, and the kind of people or resources they need. After enough context, create a concise Northstar Roadmap with: north star, current position, three priorities, first 30 days, recommended connections, and one next action. Use warm, direct language. Never claim to have created an account or made an introduction. Clearly label the roadmap when ready with the heading NORTHSTAR ROADMAP.`,
+    model: 'openai/gpt-5.4-mini-fast',
+    system: systemPromptFor(agent),
     messages: await convertToModelMessages(messages),
-    maxOutputTokens: 1200,
+    maxOutputTokens: 1500,
+    providerOptions: { openai: { reasoningEffort: 'low' } },
   })
   return result.toUIMessageStreamResponse()
 }

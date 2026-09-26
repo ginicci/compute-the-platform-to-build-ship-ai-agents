@@ -1,63 +1,205 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
+import { ArrowDown, ArrowUp, RotateCcw, Square } from 'lucide-react'
+import { AGENTS, DEFAULT_AGENT_ID, getAgent, type AgentId } from '@/lib/agents'
 import { Button } from '@/components/ui/button'
-const tiers = [
-  { name: 'Explorer', detail: 'Find your direction', price: 'Free' },
-  { name: 'Builder', detail: 'Develop with momentum', price: '$29 / month' },
-  { name: 'Catalyst', detail: 'Accelerate with support', price: '$99 / month' },
-]
+
+const transport = new DefaultChatTransport({ api: '/api/chat' })
 
 export function OnboardingAgent() {
-  const [input, setInput] = useState('')
-  const [tier, setTier] = useState('Builder')
-  const [roadmapReady, setRoadmapReady] = useState(false)
-  const { messages, sendMessage, status } = useChat({ transport: new DefaultChatTransport({ api: '/api/chat' }) })
+  const [agentId, setAgentId] = useState<AgentId>(DEFAULT_AGENT_ID)
+  const agent = getAgent(agentId) ?? AGENTS[0]
 
-  const submit = () => {
-    if (!input.trim() || status !== 'ready') return
-    sendMessage({ text: input })
-    setInput('')
+  return (
+    <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col overflow-hidden">
+      <header className="flex flex-col gap-3 border-b border-border px-4 pb-3 pt-4 sm:px-6">
+        <div className="flex items-baseline justify-between gap-3">
+          <h1 className="font-display text-xl tracking-tight">Northstar agents</h1>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-primary">Ginicci</p>
+        </div>
+        <nav aria-label="Agent categories" className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
+          <ul className="flex w-max gap-2">
+            {AGENTS.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => setAgentId(item.id)}
+                  aria-pressed={item.id === agentId}
+                  className={`min-h-11 whitespace-nowrap border px-4 text-sm transition-colors ${
+                    item.id === agentId
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border text-muted-foreground hover:border-primary/60 hover:text-foreground'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </header>
+      <AgentChat key={agent.id} agentId={agent.id} />
+    </div>
+  )
+}
+
+function AgentChat({ agentId }: { agentId: AgentId }) {
+  const agent = getAgent(agentId) ?? AGENTS[0]
+  const [input, setInput] = useState('')
+  const [showJump, setShowJump] = useState(false)
+  const scrollRef = useRef<HTMLElement>(null)
+  const pinnedRef = useRef(true)
+  const { messages, sendMessage, status, stop, error, regenerate } = useChat({ id: agentId, transport })
+
+  const busy = status === 'submitted' || status === 'streaming'
+
+  const scrollToBottom = (smooth = false) => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
   }
 
-  const account = () => {
-    window.location.href = '/sign-up'
+  useEffect(() => {
+    if (pinnedRef.current) scrollToBottom()
+  }, [messages, status, error])
+
+  const handleScroll = () => {
+    const el = scrollRef.current
+    if (!el) return
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+    pinnedRef.current = nearBottom
+    setShowJump(!nearBottom)
+  }
+
+  const send = (text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed || busy) return
+    pinnedRef.current = true
+    setShowJump(false)
+    sendMessage({ text: trimmed }, { body: { agentId } })
+    setInput('')
+    requestAnimationFrame(() => scrollToBottom())
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-10 lg:grid-cols-[1fr_340px]">
-      <section className="flex min-h-[620px] flex-col border border-border bg-card/70 p-5 sm:p-8">
-        <div className="mb-8 flex items-start justify-between gap-4 border-b border-border pb-5">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">Northstar / onboarding</p>
-            <h1 className="mt-3 text-3xl font-display tracking-tight sm:text-5xl">Let&apos;s find your next move.</h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">Northstar learns what you&apos;re building, where you&apos;re going, and what&apos;s in the way—then turns it into a practical path forward.</p>
+    <>
+      <div className="relative flex min-h-0 flex-1 flex-col">
+      <section
+        ref={scrollRef}
+        onScroll={handleScroll}
+        aria-live="polite"
+        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6"
+      >
+        {messages.length === 0 && (
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">{agent.name}</p>
+              <h2 className="text-balance font-display text-3xl tracking-tight">{agent.tagline}</h2>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {agent.starters.map((starter) => (
+                <li key={starter}>
+                  <button
+                    type="button"
+                    onClick={() => send(starter)}
+                    className="min-h-12 w-full border border-border px-4 py-3 text-left text-sm leading-relaxed text-foreground transition-colors hover:border-primary/60 hover:bg-primary/5"
+                  >
+                    {starter}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
-          <span className="hidden border border-primary/40 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-primary sm:block">Ginicci</span>
-        </div>
-        <div className="flex-1 space-y-5 overflow-y-auto pr-1">
-          {messages.length === 0 && <div className="max-w-md border-l-2 border-primary pl-4 text-sm leading-6 text-muted-foreground">I&apos;m Northstar. Tell me what you&apos;re building, changing, or trying to become. We&apos;ll make the direction clearer together.</div>}
-          {messages.map((message) => <div key={message.id} className={`max-w-2xl text-sm leading-7 ${message.role === 'user' ? 'ml-auto bg-primary/10 p-4' : 'border-l-2 border-primary pl-4 text-muted-foreground'}`}>{message.parts?.filter((part) => part.type === 'text').map((part) => part.text).join('')}</div>)}
-          {status === 'streaming' && <p className="font-mono text-xs uppercase tracking-widest text-primary">Northstar is thinking...</p>}
-        </div>
-        <div className="mt-8 flex gap-3 border-t border-border pt-5">
-          <input value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229) submit() }} placeholder="Tell Northstar where you are starting..." className="min-w-0 flex-1 bg-background px-4 py-3 text-sm outline-none ring-1 ring-border focus:ring-primary" aria-label="Message Northstar" />
-          <Button onClick={submit} disabled={status !== 'ready' || !input.trim()}>Send</Button>
-        </div>
+        )}
+
+        {messages.map((message) => {
+          const text = message.parts
+            .filter((part) => part.type === 'text')
+            .map((part) => part.text)
+            .join('')
+          if (message.role === 'user') {
+            return (
+              <p key={message.id} className="ml-auto max-w-[85%] whitespace-pre-wrap bg-primary/15 px-4 py-3 text-base leading-relaxed text-foreground">
+                {text}
+              </p>
+            )
+          }
+          return (
+            <div key={message.id} className="flex flex-col gap-1">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-primary">{agent.name}</p>
+              <p className="whitespace-pre-wrap text-base leading-relaxed text-foreground">{text}</p>
+            </div>
+          )
+        })}
+
+        {status === 'submitted' && (
+          <p className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary">
+            <span className="size-2 animate-pulse bg-primary" aria-hidden="true" />
+            Replying
+          </p>
+        )}
+
+        {error && (
+          <div role="alert" className="flex items-center justify-between gap-3 border border-destructive/50 px-4 py-3 text-sm text-foreground">
+            <span>{'Something went wrong. Please try again.'}</span>
+            <Button size="sm" variant="outline" onClick={() => regenerate({ body: { agentId } })}>
+              <RotateCcw aria-hidden="true" />
+              Retry
+            </Button>
+          </div>
+        )}
       </section>
-      <aside className="h-fit border border-border bg-card/70 p-5 sm:p-7">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Your Northstar</p>
-        <h2 className="mt-3 text-2xl font-display">A roadmap made for you.</h2>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">When Northstar has enough context, it will shape your answers into a focused roadmap.</p>
-        <div className="mt-7 space-y-3">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Choose your starting tier</p>
-          {tiers.map((item) => <button key={item.name} onClick={() => setTier(item.name)} className={`w-full border p-4 text-left transition-colors ${tier === item.name ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'}`}><div className="flex items-center justify-between"><span className="font-display text-lg">{item.name}</span><span className="font-mono text-xs text-primary">{item.price}</span></div><span className="mt-1 block text-xs text-muted-foreground">{item.detail}</span></button>)}
-        </div>
-        <Button className="mt-6 w-full" variant="outline" onClick={() => setRoadmapReady(true)}>{roadmapReady ? 'Roadmap ready to save' : 'I have my direction'}</Button>
-        {roadmapReady && <div className="mt-5 border-t border-border pt-5"><p className="text-sm leading-6 text-muted-foreground">Create an account to save your Northstar Roadmap, continue your progress, and unlock your {tier} journey.</p><Button className="mt-4 w-full" onClick={account}>Create account / sign in</Button></div>}
-      </aside>
-    </div>
+      {showJump && (
+        <button
+          type="button"
+          onClick={() => {
+            pinnedRef.current = true
+            setShowJump(false)
+            scrollToBottom(true)
+          }}
+          className="absolute bottom-3 left-1/2 flex min-h-11 -translate-x-1/2 items-center gap-2 border border-primary bg-background px-4 text-sm text-foreground shadow-lg"
+        >
+          <ArrowDown className="size-4" aria-hidden="true" />
+          Jump to latest
+        </button>
+      )}
+      </div>
+
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          send(input)
+        }}
+        className="flex items-end gap-2 border-t border-border bg-background px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6"
+      >
+        <label htmlFor="agent-input" className="sr-only">{`Message ${agent.name}`}</label>
+        <textarea
+          id="agent-input"
+          rows={1}
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) {
+              event.preventDefault()
+              send(input)
+            }
+          }}
+          placeholder={`Ask ${agent.name}...`}
+          className="max-h-40 min-h-12 flex-1 resize-none bg-card px-4 py-3 text-base leading-relaxed text-foreground outline-none ring-1 ring-border placeholder:text-muted-foreground focus:ring-primary"
+        />
+        {busy ? (
+          <Button type="button" size="icon" className="size-12" onClick={() => stop()} aria-label="Stop reply">
+            <Square aria-hidden="true" />
+          </Button>
+        ) : (
+          <Button type="submit" size="icon" className="size-12" disabled={!input.trim()} aria-label="Send message">
+            <ArrowUp aria-hidden="true" />
+          </Button>
+        )}
+      </form>
+    </>
   )
 }
