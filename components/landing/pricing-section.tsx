@@ -92,14 +92,14 @@ export function PricingSection() {
 
         {/* Pricing cards - Horizontal layout with overlap */}
         <div className="relative">
-          <div className="grid lg:grid-cols-3 gap-4 lg:gap-0">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-0">
             {plans.map((plan, index) => (
               <div
                 key={plan.name}
                 className={`relative bg-background border transition-all duration-700 ${
                   plan.highlight 
-                    ? "border-foreground lg:-mx-2 lg:z-10 lg:scale-105" 
-                    : "border-foreground/10 lg:first:-mr-2 lg:last:-ml-2"
+                    ? "border-foreground xl:z-10 xl:scale-105"
+                    : "border-foreground/10"
                 } ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"}`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
@@ -113,7 +113,7 @@ export function PricingSection() {
                   </div>
                 )}
 
-                <div className="p-8 lg:p-10">
+                <div className="p-8">
                   {/* Plan header */}
                   <div className="mb-8 pb-8 border-b border-foreground/10">
                     <span className="font-mono text-xs text-muted-foreground">

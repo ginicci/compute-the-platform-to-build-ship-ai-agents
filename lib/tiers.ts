@@ -51,6 +51,23 @@ export const TIERS: Tier[] = [
     highlight: true,
   },
   {
+    id: "team",
+    name: "Team",
+    description: "For growing teams running agents across the business",
+    priceInCents: { monthly: 6000, annual: 4800 },
+    features: [
+      "100 concurrent agents",
+      "250,000 tasks per month",
+      "Everything in Plus",
+      "Shared agent library",
+      "Role-based access for teammates",
+      "Usage analytics",
+      "Priority support",
+    ],
+    cta: "Upgrade to Team",
+    highlight: false,
+  },
+  {
     id: "pro",
     name: "Pro",
     description: "Maximum power for serious ecosystem builders",
