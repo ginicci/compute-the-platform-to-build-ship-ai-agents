@@ -86,7 +86,7 @@ export function PricingSection() {
             ))}
           </div>
           <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Save 20% yearly
+            Save 20% yearly · Free trial on every paid plan
           </span>
         </div>
 
@@ -138,6 +138,11 @@ export function PricingSection() {
                           ? `${formatDollars(plan.priceInCents.annual * 12)} billed yearly`
                           : "billed monthly"}
                     </p>
+                    {plan.trialDays > 0 && (
+                      <p className="mt-3 inline-flex border border-foreground/20 px-2 py-1 font-mono text-xs uppercase tracking-widest text-foreground">
+                        {plan.trialDays}-day free trial
+                      </p>
+                    )}
                   </div>
 
                   {/* Features */}

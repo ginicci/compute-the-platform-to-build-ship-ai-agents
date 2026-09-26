@@ -2,7 +2,6 @@
 
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { isOwnerEmail } from "@/lib/owner"
 import { stripe } from "@/lib/stripe"
 import { getTier, isPaidTier, type BillingInterval } from "@/lib/tiers"
 
@@ -24,7 +23,7 @@ export async function startSubscriptionCheckout(
   }
 
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || !isOwnerEmail(session.user.email)) {
+  if (!session) {
     throw new Error("Unauthorized")
   }
 
@@ -57,6 +56,7 @@ export async function startSubscriptionCheckout(
       },
     ],
     subscription_data: {
+      ...(tier.trialDays > 0 ? { trial_period_days: tier.trialDays } : {}),
       metadata: {
         tierId: tier.id,
         interval,

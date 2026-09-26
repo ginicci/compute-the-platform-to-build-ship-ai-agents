@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { CheckoutForm } from '@/components/checkout/checkout-form'
-import { getOwnerSession } from '@/lib/owner-session'
+import { getUserSession } from '@/lib/session'
 import { formatDollars, getTier, isPaidTier, type BillingInterval } from '@/lib/tiers'
 
 export const metadata: Metadata = {
@@ -20,7 +20,7 @@ export default async function CheckoutPage({
   const tier = plan ? getTier(plan) : undefined
   if (!tier || !isPaidTier(tier)) redirect('/#pricing')
 
-  if (!(await getOwnerSession())) redirect('/sign-in')
+  if (!(await getUserSession())) redirect('/sign-up')
 
   const interval: BillingInterval = rawInterval === 'monthly' ? 'monthly' : 'annual'
   const perMonth = formatDollars(tier.priceInCents[interval])
@@ -49,7 +49,9 @@ export default async function CheckoutPage({
             <span className="text-base text-muted-foreground"> /month</span>
           </h1>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            {billedNote}. Cancel anytime.
+            {tier.trialDays > 0
+              ? `${tier.trialDays} days free, then ${billedNote.toLowerCase()}. Cancel anytime before the trial ends and you won't be charged.`
+              : `${billedNote}. Cancel anytime.`}
           </p>
         </header>
 

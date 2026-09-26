@@ -1,10 +1,10 @@
 import { convertToModelMessages, streamText } from 'ai'
-import { getOwnerSession } from '@/lib/owner-session'
+import { getUserSession } from '@/lib/session'
 
 const MAX_MESSAGES = 60
 
 export async function POST(request: Request) {
-  if (!(await getOwnerSession())) {
+  if (!(await getUserSession())) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

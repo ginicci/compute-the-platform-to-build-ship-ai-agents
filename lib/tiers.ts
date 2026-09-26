@@ -10,6 +10,7 @@ export interface Tier {
   description: string
   // Price in cents per month for each billing interval (annual is the per-month equivalent).
   priceInCents: Record<BillingInterval, number>
+  trialDays: number
   features: string[]
   cta: string
   highlight: boolean
@@ -21,6 +22,7 @@ export const TIERS: Tier[] = [
     name: "Free",
     description: "Try Northstar and see what your agents can do",
     priceInCents: { monthly: 0, annual: 0 },
+    trialDays: 0,
     features: [
       "3 concurrent agents",
       "1,000 tasks per month",
@@ -37,6 +39,7 @@ export const TIERS: Tier[] = [
     name: "Plus",
     description: "For founders and professionals building every day",
     priceInCents: { monthly: 2000, annual: 1600 },
+    trialDays: 14,
     features: [
       "25 concurrent agents",
       "50,000 tasks per month",
@@ -47,7 +50,7 @@ export const TIERS: Tier[] = [
       "Full audit trails",
       "Priority support",
     ],
-    cta: "Upgrade to Plus",
+    cta: "Start free trial",
     highlight: true,
   },
   {
@@ -55,6 +58,7 @@ export const TIERS: Tier[] = [
     name: "Team",
     description: "For growing teams running agents across the business",
     priceInCents: { monthly: 6000, annual: 4800 },
+    trialDays: 14,
     features: [
       "100 concurrent agents",
       "250,000 tasks per month",
@@ -64,7 +68,7 @@ export const TIERS: Tier[] = [
       "Usage analytics",
       "Priority support",
     ],
-    cta: "Upgrade to Team",
+    cta: "Start free trial",
     highlight: false,
   },
   {
@@ -72,6 +76,7 @@ export const TIERS: Tier[] = [
     name: "Pro",
     description: "Maximum power for serious ecosystem builders",
     priceInCents: { monthly: 20000, annual: 16000 },
+    trialDays: 7,
     features: [
       "Unlimited agents",
       "Unlimited tasks",
@@ -82,7 +87,7 @@ export const TIERS: Tier[] = [
       "SLA guarantee",
       "24/7 dedicated support",
     ],
-    cta: "Upgrade to Pro",
+    cta: "Start free trial",
     highlight: false,
   },
 ]
