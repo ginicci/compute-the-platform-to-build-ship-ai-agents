@@ -30,6 +30,22 @@ const nextConfig = {
     unoptimized: true,
   },
   poweredByHeader: false,
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'ginicci.app' }],
+        destination: 'https://www.ginicci.app/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'ginicci.com' }],
+        destination: 'https://www.ginicci.app/:path*',
+        permanent: true,
+      },
+    ]
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
   },
