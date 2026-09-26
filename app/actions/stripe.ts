@@ -3,6 +3,7 @@
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { stripe } from "@/lib/stripe"
+import { getLatestSubscription, hasAccess } from "@/lib/subscriptions"
 import { getTier, isPaidTier, type BillingInterval } from "@/lib/tiers"
 
 function randomSuffix() {
@@ -26,6 +27,13 @@ export async function startSubscriptionCheckout(
   if (!session) {
     throw new Error("Unauthorized")
   }
+
+  const existing = await getLatestSubscription(session.user.id)
+  if (existing && hasAccess(existing.status)) {
+    throw new Error("You already have an active plan. Manage it from your account page.")
+  }
+  // Free trials are for first-time subscribers only.
+  const trialDays = existing ? 0 : tier.trialDays
 
   // `annual` cents are the per-month equivalent; bill the full year up front.
   const unitAmount =
@@ -56,7 +64,7 @@ export async function startSubscriptionCheckout(
       },
     ],
     subscription_data: {
-      ...(tier.trialDays > 0 ? { trial_period_days: tier.trialDays } : {}),
+      ...(trialDays > 0 ? { trial_period_days: trialDays } : {}),
       metadata: {
         tierId: tier.id,
         interval,
@@ -70,5 +78,5 @@ export async function startSubscriptionCheckout(
     },
   })
 
-  return checkout.client_secret
+  return { clientSecret: checkout.client_secret, sessionId: checkout.id }
 }
