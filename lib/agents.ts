@@ -110,6 +110,8 @@ export function getAgent(id: unknown): Agent | undefined {
   return AGENTS.find((agent) => agent.id === id)
 }
 
+const LANGUAGE_RULE = `Language: always reply in the same language the customer used in their most recent message (for example Spanish, Portuguese, French, Chinese, Arabic, Hindi). If they switch languages, switch with them. If they ask you to use a specific language, use it until they ask otherwise. Keep any disclaimers, suggestions, and follow-up questions in that same language. Only default to English when the language is unclear.`
+
 export function systemPromptFor(agent: Agent) {
-  return `${agent.focus}\n\n${STYLE}`
+  return `${agent.focus}\n\n${STYLE}\n\n${LANGUAGE_RULE}`
 }
