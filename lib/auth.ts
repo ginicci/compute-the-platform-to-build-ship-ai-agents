@@ -6,6 +6,8 @@ import { sendOwnerAlert } from '@/lib/owner-alerts'
 const originValues = [
   'https://ginicci.app',
   'https://www.ginicci.app',
+  'https://ginicci.com',
+  'https://www.ginicci.com',
   process.env.V0_RUNTIME_URL,
   process.env.V0_DEV_APP_URL,
   process.env.V0_BUILD_URL,
@@ -38,7 +40,11 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          await sendOwnerAlert('New sign-up', [`Email: ${user.email}`, `Name: ${user.name || '(none)'}`])
+          // Operational alerts are non-critical. Their provider configuration
+          // must never change the outcome of an account-creation transaction.
+          void sendOwnerAlert('New sign-up', [`Email: ${user.email}`, `Name: ${user.name || '(none)'}`]).catch(
+            (error) => console.error('Owner sign-up alert failed', error),
+          )
         },
       },
     },

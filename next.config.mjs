@@ -44,6 +44,12 @@ const nextConfig = {
         destination: 'https://www.ginicci.app/:path*',
         permanent: true,
       },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.ginicci.com' }],
+        destination: 'https://www.ginicci.app/:path*',
+        permanent: true,
+      },
     ]
   },
   async headers() {
