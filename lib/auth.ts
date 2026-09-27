@@ -6,6 +6,8 @@ import { sendOwnerAlert } from '@/lib/owner-alerts'
 const originValues = [
   'https://ginicci.app',
   'https://www.ginicci.app',
+  'https://ginicci.com',
+  'https://www.ginicci.com',
   process.env.V0_RUNTIME_URL,
   process.env.V0_DEV_APP_URL,
   process.env.V0_BUILD_URL,
