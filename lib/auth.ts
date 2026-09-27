@@ -3,9 +3,18 @@ import { Pool } from 'pg'
 import { logActivity } from '@/lib/legal'
 import { sendOwnerAlert } from '@/lib/owner-alerts'
 
-const originValues = [
+// Keep the production hosts explicit: auth requests can arrive before a
+// browser follows a canonical-host redirect, and Better Auth rejects any
+// origin absent from this allowlist.
+const productionOrigins = [
   'https://ginicci.app',
   'https://www.ginicci.app',
+  'https://ginicci.com',
+  'https://www.ginicci.com',
+]
+
+const originValues = [
+  ...productionOrigins,
   process.env.V0_RUNTIME_URL,
   process.env.V0_DEV_APP_URL,
   process.env.V0_BUILD_URL,
