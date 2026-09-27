@@ -38,7 +38,11 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          await sendOwnerAlert('New sign-up', [`Email: ${user.email}`, `Name: ${user.name || '(none)'}`])
+          // Operational alerts are non-critical. Their provider configuration
+          // must never change the outcome of an account-creation transaction.
+          void sendOwnerAlert('New sign-up', [`Email: ${user.email}`, `Name: ${user.name || '(none)'}`]).catch(
+            (error) => console.error('Owner sign-up alert failed', error),
+          )
         },
       },
     },
