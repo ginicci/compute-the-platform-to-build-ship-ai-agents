@@ -7,6 +7,8 @@ import { acceptTerms } from '@/app/actions/legal'
 import { TermsCheckbox } from '@/components/legal/terms-checkbox'
 import { authClient } from '@/lib/auth-client'
 
+const fallbackError = "We couldn't complete that request. Check your details and try again."
+
 export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const router = useRouter()
   const [error, setError] = useState('')
@@ -23,28 +25,35 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
 
     setPending(true)
     setError('')
-    const data = new FormData(event.currentTarget)
-    const result = mode === 'sign-up'
-      ? await authClient.signUp.email({
-          email: String(data.get('email')),
-          password: String(data.get('password')),
-          name: String(data.get('name')),
-        })
-      : await authClient.signIn.email({
-          email: String(data.get('email')),
-          password: String(data.get('password')),
-        })
 
-    if (result.error) {
-      setError(result.error.message || "We couldn't complete that request. Check your details and try again.")
-    } else {
+    try {
+      const data = new FormData(event.currentTarget)
+      const result = mode === 'sign-up'
+        ? await authClient.signUp.email({
+            email: String(data.get('email')),
+            password: String(data.get('password')),
+            name: String(data.get('name')),
+          })
+        : await authClient.signIn.email({
+            email: String(data.get('email')),
+            password: String(data.get('password')),
+          })
+
+      if (result.error) {
+        setError(result.error.message || fallbackError)
+        return
+      }
+
       if (mode === 'sign-up') {
         await acceptTerms('sign_up').catch(() => null)
       }
       router.push('/onboarding')
       router.refresh()
+    } catch (caught) {
+      setError(caught instanceof Error && caught.message ? caught.message : fallbackError)
+    } finally {
+      setPending(false)
     }
-    setPending(false)
   }
 
   return (
