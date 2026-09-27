@@ -1,6 +1,9 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
 import { siteUrl } from '@/lib/site'
+import { getLocale } from '@/lib/i18n/get-locale'
+import { isRtl } from '@/lib/i18n/locales'
+import { PageTranslator } from '@/components/i18n/page-translator'
 import { Instrument_Sans, Instrument_Serif, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
@@ -51,15 +54,22 @@ export const viewport: Viewport = {
   themeColor: '#0a0a0a',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale()
   return (
-    <html lang="en">
+    <html
+      lang={locale}
+      dir={isRtl(locale) ? 'rtl' : 'ltr'}
+      data-i18n-pending={locale === 'en' ? undefined : ''}
+      suppressHydrationWarning
+    >
       <body className={`${instrumentSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         {children}
+        <PageTranslator locale={locale} />
         <Analytics />
       </body>
     </html>

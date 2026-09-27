@@ -233,7 +233,7 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
             .join('')
           if (message.role === 'user') {
             return (
-              <p key={message.id} className="ml-auto max-w-[85%] whitespace-pre-wrap bg-primary/15 px-4 py-3 text-base leading-relaxed text-foreground">
+              <p key={message.id} translate="no" className="ml-auto max-w-[85%] whitespace-pre-wrap bg-primary/15 px-4 py-3 text-base leading-relaxed text-foreground">
                 {text}
               </p>
             )
@@ -241,7 +241,7 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
           return (
             <div key={message.id} className="flex flex-col gap-1">
               <p className="font-mono text-[10px] uppercase tracking-widest text-primary">{agent.name}</p>
-              <p className="whitespace-pre-wrap text-base leading-relaxed text-foreground">{text}</p>
+              <p translate="no" className="whitespace-pre-wrap text-base leading-relaxed text-foreground">{text}</p>
               {text && !stillWriting && (
                 <button
                   type="button"

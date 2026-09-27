@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowUpRight } from "lucide-react";
+import { LanguagePicker } from "@/components/i18n/language-picker";
 import { useEffect, useRef } from "react";
 
 const footerLinks = {
@@ -171,7 +172,8 @@ export function FooterSection() {
             &copy; 2026 GINICCI. All rights reserved.
           </p>
 
-          <div className="flex items-center gap-4 text-sm text-white/30">
+          <div className="flex flex-col items-center gap-4 text-sm text-white/30 md:flex-row">
+            <LanguagePicker tone="light" />
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#eca8d6]" />
               The ecosystem is growing
