@@ -164,7 +164,7 @@ export function HeroSection() {
         ))}
       </div>
       
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 lg:px-12 py-32 lg:py-40">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-5 sm:px-6 lg:px-12 py-28 sm:py-32 lg:py-40">
         <div className="lg:max-w-[55%]">
         {/* Eyebrow */}
         <div 
@@ -227,7 +227,7 @@ export function HeroSection() {
           isVisible ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="max-w-[1400px] mx-auto flex items-start gap-10 lg:gap-20">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-3 gap-3 sm:flex sm:items-start sm:gap-10 lg:gap-20">
           {[
             { value: "10x", label: "faster workflows" },
             { value: "99.9%", label: "reliable execution" },

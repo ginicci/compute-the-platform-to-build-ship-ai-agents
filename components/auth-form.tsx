@@ -57,17 +57,17 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto flex w-full max-w-md flex-col gap-5 border border-border bg-card p-8">
+    <form onSubmit={submit} className="mx-auto flex w-full max-w-md flex-col gap-5 border border-border bg-card p-5 sm:p-8">
       <p className="font-mono text-xs uppercase tracking-widest text-primary">Ginicci / Northstar</p>
-      <h1 className="text-4xl font-display">{mode === 'sign-up' ? 'Create your account.' : 'Welcome back.'}</h1>
-      {mode === 'sign-up' && <input name="name" required placeholder="Your name" className="border border-border bg-background px-4 py-3 text-base" />}
-      <input name="email" type="email" required placeholder="Email address" className="border border-border bg-background px-4 py-3 text-base" />
-      <input name="password" type="password" required minLength={mode === 'sign-up' ? 12 : 8} autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'} placeholder={mode === 'sign-up' ? 'Password (12+ characters)' : 'Password'} className="border border-border bg-background px-4 py-3 text-base" />
+      <h1 className="text-3xl font-display sm:text-4xl">{mode === 'sign-up' ? 'Create your account.' : 'Welcome back.'}</h1>
+      {mode === 'sign-up' && <input name="name" required placeholder="Your name" className="min-h-12 w-full border border-border bg-background px-4 py-3 text-base" />}
+      <input name="email" type="email" required placeholder="Email address" className="min-h-12 w-full border border-border bg-background px-4 py-3 text-base" />
+      <input name="password" type="password" required minLength={mode === 'sign-up' ? 12 : 8} autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'} placeholder={mode === 'sign-up' ? 'Password (12+ characters)' : 'Password'} className="min-h-12 w-full border border-border bg-background px-4 py-3 text-base" />
       {mode === 'sign-up' && <TermsCheckbox checked={agreed} onChange={setAgreed} />}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {existingAccount && <a href="/sign-in" className="text-sm underline">This email already has an account. Sign in instead.</a>}
       <Button disabled={pending} className="min-h-11">{pending ? 'Please wait...' : mode === 'sign-up' ? 'Create account' : 'Sign in'}</Button>
-      <a href={mode === 'sign-up' ? '/sign-in' : '/sign-up'} className="text-center text-sm text-muted-foreground underline">{mode === 'sign-up' ? 'Already have an account? Sign in' : 'Need an account? Create one'}</a>
+      <a href={mode === 'sign-up' ? '/sign-in' : '/sign-up'} className="min-h-11 text-center text-sm text-muted-foreground underline">{mode === 'sign-up' ? 'Already have an account? Sign in' : 'Need an account? Create one'}</a>
     </form>
   )
 }
