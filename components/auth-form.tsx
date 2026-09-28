@@ -3,7 +3,6 @@
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { acceptTerms } from '@/app/actions/legal'
 import { TermsCheckbox } from '@/components/legal/terms-checkbox'
 import { authClient } from '@/lib/auth-client'
 
@@ -14,6 +13,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
   const [agreed, setAgreed] = useState(false)
+  const [verificationSent, setVerificationSent] = useState(false)
   const existingAccount = mode === 'sign-up' && /already|exist|registered|duplicate/i.test(error)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -30,12 +30,12 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       const data = new FormData(event.currentTarget)
       const result = mode === 'sign-up'
         ? await authClient.signUp.email({
-            email: String(data.get('email')),
+            email: String(data.get('email')).trim().toLowerCase(),
             password: String(data.get('password')),
-            name: String(data.get('name')),
+            name: String(data.get('name')).trim(),
           })
         : await authClient.signIn.email({
-            email: String(data.get('email')),
+            email: String(data.get('email')).trim().toLowerCase(),
             password: String(data.get('password')),
           })
 
@@ -45,7 +45,8 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       }
 
       if (mode === 'sign-up') {
-        await acceptTerms('sign_up').catch(() => null)
+        setVerificationSent(true)
+        return
       }
       router.push('/onboarding')
       router.refresh()
@@ -54,6 +55,10 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
     } finally {
       setPending(false)
     }
+  }
+
+  if (verificationSent) {
+    return <div role="status" className="mx-auto flex w-full max-w-md flex-col gap-4 border border-border bg-card p-5 sm:p-8"><h1 className="text-3xl font-display">Check your email</h1><p className="text-sm text-muted-foreground">If this address can create or access an account, we sent a verification email. Follow its link before signing in.</p><a href="/sign-in" className="text-sm underline">Go to sign in</a><a href="/forgot-password" className="text-sm underline">Recover an existing account</a></div>
   }
 
   return (
@@ -65,8 +70,9 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       <input name="password" type="password" required minLength={mode === 'sign-up' ? 12 : 8} autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'} placeholder={mode === 'sign-up' ? 'Password (12+ characters)' : 'Password'} className="min-h-12 w-full border border-border bg-background px-4 py-3 text-base" />
       {mode === 'sign-up' && <TermsCheckbox checked={agreed} onChange={setAgreed} />}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {existingAccount && <a href="/sign-in" className="text-sm underline">This email already has an account. Sign in instead.</a>}
+      {existingAccount && <p className="text-sm">This email already has an account. <a href="/sign-in" className="underline">Sign in</a> or <a href="/forgot-password" className="underline">reset your password</a>.</p>}
       <Button disabled={pending} className="min-h-11">{pending ? 'Please wait...' : mode === 'sign-up' ? 'Create account' : 'Sign in'}</Button>
+      {mode === 'sign-in' && <a href="/forgot-password" className="min-h-11 text-center text-sm text-muted-foreground underline">Forgot your password?</a>}
       <a href={mode === 'sign-up' ? '/sign-in' : '/sign-up'} className="min-h-11 text-center text-sm text-muted-foreground underline">{mode === 'sign-up' ? 'Already have an account? Sign in' : 'Need an account? Create one'}</a>
     </form>
   )

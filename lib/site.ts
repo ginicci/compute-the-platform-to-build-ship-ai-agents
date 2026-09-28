@@ -1,3 +1,1 @@
-export const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : 'http://localhost:3000'
+export const siteUrl = process.env.BETTER_AUTH_URL || 'http://localhost:3000'
