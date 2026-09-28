@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { Resend } from 'resend'
+import { sendAuthEmail } from '@/lib/auth-email'
 
 let client: Resend | null = null
 
@@ -37,18 +38,9 @@ export function formatCents(cents: number) {
 }
 
 export async function sendPasswordResetEmail({ email, resetUrl }: { email: string; resetUrl: string }) {
-  const from = process.env.EMAIL_FROM?.trim()
-  const resend = getClient()
-  if (!from || !resend) {
-    console.error('Password reset email is unavailable: email provider is not configured')
-    return
-  }
-
-  const { error } = await resend.emails.send({
-    from,
+  await sendAuthEmail({
     to: email,
     subject: 'Reset your Northstar password',
     text: `Reset your password using this link: ${resetUrl}\n\nThis link expires in one hour. If you did not request a reset, you can ignore this email.`,
   })
-  if (error) throw new Error(`Password reset email failed: ${error.name}`)
 }

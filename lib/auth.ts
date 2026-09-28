@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth'
 import { Pool } from 'pg'
 import { logActivity } from '@/lib/legal'
 import { sendOwnerAlert, sendPasswordResetEmail } from '@/lib/owner-alerts'
+import { sendVerificationEmail } from '@/lib/auth-email'
 
 const originValues = [
   'https://ginicci.app',
@@ -22,11 +23,18 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 12,
     maxPasswordLength: 128,
+    requireEmailVerification: true,
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       await sendPasswordResetEmail({ email: user.email, resetUrl: url })
     },
+  },
+  emailVerification: {
+    sendVerificationEmail,
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7,
