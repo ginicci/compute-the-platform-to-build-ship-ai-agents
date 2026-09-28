@@ -15,3 +15,5 @@ SELECT id, email, lower(btrim(email)) AS normalized_email, "createdAt"
 FROM "user"
 WHERE email <> lower(btrim(email))
 ORDER BY "createdAt";
+
+-- This audit intentionally performs no updates or deletes.
