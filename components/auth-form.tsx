@@ -65,6 +65,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       <input name="password" type="password" required minLength={mode === 'sign-up' ? 12 : 8} autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'} placeholder={mode === 'sign-up' ? 'Password (12+ characters)' : 'Password'} className="min-h-12 w-full border border-border bg-background px-4 py-3 text-base" />
       {mode === 'sign-up' && <TermsCheckbox checked={agreed} onChange={setAgreed} />}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      {mode === 'sign-in' && <a href="/forgot-password" className="min-h-11 text-sm underline">Forgot password?</a>}
       {existingAccount && <a href="/sign-in" className="text-sm underline">This email already has an account. Sign in instead.</a>}
       <Button disabled={pending} className="min-h-11">{pending ? 'Please wait...' : mode === 'sign-up' ? 'Create account' : 'Sign in'}</Button>
       <a href={mode === 'sign-up' ? '/sign-in' : '/sign-up'} className="min-h-11 text-center text-sm text-muted-foreground underline">{mode === 'sign-up' ? 'Already have an account? Sign in' : 'Need an account? Create one'}</a>

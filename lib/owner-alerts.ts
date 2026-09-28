@@ -35,3 +35,20 @@ export async function sendOwnerAlert(subject: string, lines: string[]) {
 export function formatCents(cents: number) {
   return `$${(cents / 100).toFixed(2)}`
 }
+
+export async function sendPasswordResetEmail({ email, resetUrl }: { email: string; resetUrl: string }) {
+  const from = process.env.EMAIL_FROM?.trim()
+  const resend = getClient()
+  if (!from || !resend) {
+    console.error('Password reset email is unavailable: email provider is not configured')
+    return
+  }
+
+  const { error } = await resend.emails.send({
+    from,
+    to: email,
+    subject: 'Reset your Northstar password',
+    text: `Reset your password using this link: ${resetUrl}\n\nThis link expires in one hour. If you did not request a reset, you can ignore this email.`,
+  })
+  if (error) throw new Error(`Password reset email failed: ${error.name}`)
+}
