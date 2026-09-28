@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { acceptTerms } from '@/app/actions/legal'
 import { TermsCheckbox } from '@/components/legal/terms-checkbox'
 import { authClient } from '@/lib/auth-client'
 
@@ -28,14 +29,15 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
 
     try {
       const data = new FormData(event.currentTarget)
+      const email = String(data.get('email')).trim().toLowerCase()
       const result = mode === 'sign-up'
         ? await authClient.signUp.email({
-            email: String(data.get('email')).trim().toLowerCase(),
+            email,
             password: String(data.get('password')),
             name: String(data.get('name')).trim(),
           })
         : await authClient.signIn.email({
-            email: String(data.get('email')).trim().toLowerCase(),
+            email,
             password: String(data.get('password')),
           })
 
@@ -45,6 +47,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       }
 
       if (mode === 'sign-up') {
+        await acceptTerms('sign_up').catch(() => null)
         setVerificationSent(true)
         return
       }
