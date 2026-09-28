@@ -17,7 +17,11 @@ export function ForgotPasswordForm() {
     setPending(true)
     setMessage('')
     try {
-      await authClient.requestPasswordReset({ email, redirectTo: `${window.location.origin}/reset-password` })
+      const result = await authClient.requestPasswordReset({
+        email: email.trim().toLowerCase(),
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      if (result.error) throw new Error(result.error.message)
     } catch {
       // Use one response for every address and provider outcome to avoid account disclosure.
     } finally {
