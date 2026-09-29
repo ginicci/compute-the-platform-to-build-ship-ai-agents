@@ -3,7 +3,6 @@
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { acceptTerms } from '@/app/actions/legal'
 import { TermsCheckbox } from '@/components/legal/terms-checkbox'
 import { authClient } from '@/lib/auth-client'
 
@@ -47,7 +46,8 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       }
 
       if (mode === 'sign-up') {
-        await acceptTerms('sign_up').catch(() => null)
+        // Email verification intentionally creates no session. Consent is recorded
+        // after the verified customer signs in and enters the application.
         setVerificationSent(true)
         return
       }
