@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { generateText } from 'ai'
 import { pool } from '@/lib/db'
+import { getUserSession } from '@/lib/session'
 import { DEFAULT_LOCALE, findLocale } from '@/lib/i18n/locales'
 
 export const maxDuration = 60
@@ -32,7 +33,8 @@ function isSameOrigin(request: Request) {
   const origin = request.headers.get('origin')
   if (!origin) return request.headers.get('sec-fetch-site') === 'same-origin'
   try {
-    return new URL(origin).host === request.headers.get('host')
+    const requestUrl = new URL(request.url)
+    return new URL(origin).origin === requestUrl.origin
   } catch {
     return false
   }
@@ -61,6 +63,7 @@ async function translateWithAI(texts: string[], languageName: string) {
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return Response.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await getUserSession())?.user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = (await request.json().catch(() => null)) as { locale?: unknown; texts?: unknown } | null
   const locale = findLocale(typeof body?.locale === 'string' ? body.locale : null)
