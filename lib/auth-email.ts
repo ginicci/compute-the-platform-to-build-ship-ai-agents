@@ -1,15 +1,24 @@
 import 'server-only'
 
-import { Resend } from 'resend'
+type Email = {
+  to: string
+  subject: string
+  text: string
+}
 
-export async function sendAuthEmail({ to, subject, text }: { to: string; subject: string; text: string }) {
-  const apiKey = process.env.RESEND_API_KEY
+export async function sendAuthEmail({ to, subject, text }: Email) {
+  const apiKey = process.env.RESEND_API_KEY?.trim()
   const from = process.env.EMAIL_FROM?.trim()
   const recipient = to.trim().toLowerCase()
   if (!apiKey || !from) throw new Error('Email delivery is not configured')
 
-  const { error } = await new Resend(apiKey).emails.send({ from, to: recipient, subject, text })
-  if (error) throw new Error(`Email delivery failed: ${error.name}`)
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to: [recipient], subject, text }),
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!response.ok) throw new Error(`Email delivery failed: Resend returned ${response.status}`)
 }
 
 export async function sendVerificationEmail({ user, url }: { user: { email: string }; url: string }) {
