@@ -7,7 +7,7 @@ type Email = {
 }
 
 export async function sendAuthEmail({ to, subject, text }: Email) {
-  const apiKey = process.env.RESEND_API_KEY?.trim()
+  const apiKey = normalizeResendApiKey(process.env.RESEND_API_KEY)
   const from = process.env.EMAIL_FROM?.trim()
   const recipient = to.trim().toLowerCase()
   if (!apiKey || !from) throw new Error('Email delivery is not configured')
@@ -19,6 +19,15 @@ export async function sendAuthEmail({ to, subject, text }: Email) {
     signal: AbortSignal.timeout(10_000),
   })
   if (!response.ok) throw new Error(`Email delivery failed: Resend returned ${response.status}`)
+}
+
+function normalizeResendApiKey(value: string | undefined) {
+  const key = value?.trim().replace(/[^\x20-\x7E]/g, '')
+  if (!key?.startsWith('re_')) {
+    console.error('[email] RESEND_API_KEY is missing or malformed')
+    return undefined
+  }
+  return key
 }
 
 export async function sendVerificationEmail({ user, url }: { user: { email: string }; url: string }) {
