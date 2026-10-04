@@ -1,12 +1,11 @@
 import { convertToModelMessages, streamText } from 'ai'
 import { after } from 'next/server'
 import { getAgent, systemPromptFor } from '@/lib/agents'
+import { ChatInputError, readChatBody, validateChatMessages } from '@/lib/chat-input'
 import { hasCurrentConsent, logActivity, requestMeta } from '@/lib/legal'
 import { isOwnerEmail } from '@/lib/owner'
 import { consumeTask, getPlanContext } from '@/lib/plan-limits'
 import { getUserSession } from '@/lib/session'
-
-const MAX_MESSAGES = 60
 
 export const maxDuration = 60
 
@@ -16,9 +15,15 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const body = await request.json().catch(() => null)
-  const messages = body?.messages
-  if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
+  let input: unknown
+  try {
+    input = await readChatBody(request)
+  } catch (error) {
+    return Response.json({ error: 'Invalid request' }, { status: error instanceof ChatInputError ? error.status : 400 })
+  }
+  const body = input && typeof input === 'object' ? input as Record<string, unknown> : null
+  const messages = validateChatMessages(body?.messages)
+  if (!messages) {
     return Response.json({ error: 'Invalid request' }, { status: 400 })
   }
 
@@ -39,6 +44,13 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Upgrade to use this agent', code: 'agent_locked' }, { status: 403 })
   }
 
+  let modelMessages
+  try {
+    modelMessages = await convertToModelMessages(messages)
+  } catch {
+    return Response.json({ error: 'Invalid request' }, { status: 400 })
+  }
+
   if (!(await consumeTask(session.user.id, plan.period, plan.tasksLimit))) {
     return Response.json({ error: 'Monthly task limit reached', code: 'task_limit' }, { status: 429 })
   }
@@ -50,7 +62,7 @@ export async function POST(request: Request) {
   const result = streamText({
     model: 'openai/gpt-5.4-mini-fast',
     system: systemPromptFor(agent),
-    messages: await convertToModelMessages(messages),
+    messages: modelMessages,
     maxOutputTokens: 1500,
     providerOptions: { openai: { reasoningEffort: 'low' } },
     onFinish: ({ finishReason, usage }) => {
