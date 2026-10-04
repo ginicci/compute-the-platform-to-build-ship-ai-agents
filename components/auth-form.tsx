@@ -14,6 +14,8 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [pending, setPending] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [verificationSent, setVerificationSent] = useState(false)
+  const [verificationEmail, setVerificationEmail] = useState('')
+  const [resendNotice, setResendNotice] = useState('')
   const existingAccount = mode === 'sign-up' && /already|exist|registered|duplicate/i.test(error)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -46,6 +48,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       }
 
       if (mode === 'sign-up') {
+        setVerificationEmail(email)
         // Email verification intentionally creates no session. Consent is recorded
         // after the verified customer signs in and enters the application.
         setVerificationSent(true)
@@ -60,8 +63,41 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
     }
   }
 
+  async function resendVerification() {
+    setPending(true)
+    setError('')
+    setResendNotice('')
+    try {
+      const result = await authClient.sendVerificationEmail({
+        email: verificationEmail,
+        callbackURL: '/onboarding',
+      })
+      if (result.error) {
+        setError("We couldn't send the verification email. Please try again later or contact support.")
+        return
+      }
+      setResendNotice('If this account needs verification, a new link has been requested. Check your inbox and spam folder.')
+    } catch {
+      setError("We couldn't send the verification email. Please try again later or contact support.")
+    } finally {
+      setPending(false)
+    }
+  }
+
   if (verificationSent) {
-    return <div role="status" className="mx-auto flex w-full max-w-md flex-col gap-4 border border-border bg-card p-5 sm:p-8"><h1 className="text-3xl font-display">Check your email</h1><p className="text-sm text-muted-foreground">If this address can create or access an account, we sent a verification email. Follow its link before signing in.</p><a href="/sign-in" className="text-sm underline">Go to sign in</a><a href="/forgot-password" className="text-sm underline">Recover an existing account</a></div>
+    return (
+      <div role="status" className="mx-auto flex w-full max-w-md flex-col gap-4 border border-border bg-card p-5 sm:p-8">
+        <h1 className="text-3xl font-display">Check your email</h1>
+        <p className="text-sm text-muted-foreground">Check your inbox and spam folder for a verification link. If you previously tried signing up, your account may already exist and you may need to request another link.</p>
+        <Button onClick={resendVerification} disabled={pending}>
+          {pending ? 'Requesting link...' : 'Resend verification email'}
+        </Button>
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        {resendNotice && <p className="text-sm text-muted-foreground">{resendNotice}</p>}
+        <a href="/sign-in" className="text-sm underline">Go to sign in</a>
+        <a href="/forgot-password" className="text-sm underline">Recover an existing account</a>
+      </div>
+    )
   }
 
   return (
