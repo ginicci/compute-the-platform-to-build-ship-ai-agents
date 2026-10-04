@@ -18,7 +18,19 @@ export async function sendAuthEmail({ to, subject, text }: Email) {
     body: JSON.stringify({ from, to: [recipient], subject, text }),
     signal: AbortSignal.timeout(10_000),
   })
-  if (!response.ok) throw new Error(`Email delivery failed: Resend returned ${response.status}`)
+  // Log provider classifications and message IDs, never recipients, tokens or bodies.
+  const payload = await response.json().catch(() => null) as { id?: string; name?: string } | null
+  if (!response.ok) {
+    const providerError = typeof payload?.name === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(payload.name)
+      ? payload.name : 'unknown_error'
+    console.error('[email] Provider rejected authentication email', { status: response.status, providerError })
+    throw new Error('Verification email could not be sent. Please try again later or contact support.')
+  }
+  if (typeof payload?.id !== 'string' || !payload.id) {
+    console.error('[email] Provider returned no email ID', { status: response.status })
+    throw new Error('Email delivery could not be confirmed. Please try again later.')
+  }
+  console.info('[email] Authentication email accepted by provider', { emailId: payload.id })
 }
 
 function normalizeResendApiKey(value: string | undefined) {
