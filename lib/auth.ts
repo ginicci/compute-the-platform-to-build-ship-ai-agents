@@ -4,18 +4,9 @@ import { logActivity } from '@/lib/legal'
 import { sendOwnerAlert, sendPasswordResetEmail } from '@/lib/owner-alerts'
 import { sendVerificationEmail } from '@/lib/auth-email'
 
-const originValues = [
-  'https://ginicci.app',
-  'https://www.ginicci.app',
-  'https://ginicci.com',
-  'https://www.ginicci.com',
-  process.env.V0_RUNTIME_URL,
-  process.env.V0_DEV_APP_URL,
-  process.env.V0_BUILD_URL,
-  process.env.V0_SANDBOX_URL,
-  process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`,
-  process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
-].filter((value): value is string => Boolean(value))
+import { authOrigins } from '@/lib/auth-origins'
+
+const { baseURL, trustedOrigins } = authOrigins(process.env)
 
 export const auth = betterAuth({
   database: new Pool({ connectionString: process.env.DATABASE_URL }),
@@ -75,8 +66,8 @@ export const auth = betterAuth({
       },
     },
   },
-  baseURL: process.env.BETTER_AUTH_URL || originValues[0],
-  trustedOrigins: ['http://localhost:3000', ...originValues],
+  baseURL,
+  trustedOrigins,
   ...(process.env.NODE_ENV === 'development'
     ? { advanced: { defaultCookieAttributes: { sameSite: 'none' as const, secure: true } } }
     : {}),
