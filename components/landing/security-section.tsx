@@ -1,5 +1,7 @@
 "use client";
 
+import { LivingArtwork } from "./living-artwork";
+
 import { useEffect, useState, useRef } from "react";
 import { Shield, Lock, Eye, FileCheck } from "lucide-react";
 
@@ -98,7 +100,7 @@ export function SecuritySection() {
             {/* Dynamic feature image with cross-fade — desktop only */}
             <div className="absolute inset-0 pointer-events-none items-center justify-end hidden lg:flex">
               {securityFeatures.map((feature, index) => (
-                <img
+                <LivingArtwork motion="float"
                   key={feature.image}
                   src={feature.image}
                   alt={feature.title}

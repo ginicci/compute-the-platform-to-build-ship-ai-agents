@@ -1,5 +1,7 @@
 "use client";
 
+import { LivingArtwork } from "./living-artwork";
+
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, Zap } from "lucide-react";
@@ -48,7 +50,7 @@ export function PricingSection() {
             <div className={`absolute inset-0 pointer-events-none transition-all duration-1000 delay-100 ${
               isVisible ? "opacity-100" : "opacity-0"
             }`}>
-              <img
+              <LivingArtwork motion="swim"
                 src="/images/whale.png"
                 alt="Organic whale"
                 className="w-full h-full object-contain object-center"

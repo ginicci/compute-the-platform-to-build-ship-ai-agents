@@ -242,3 +242,49 @@ html[data-i18n-pending] body {
 @media (prefers-reduced-motion: reduce) {
   .hero-petal { animation: none; display: none; }
 }
+
+/* Slow, seamless motion for landing artwork; individual transform properties
+   preserve the mirrored hands' existing scaleX transform and parent reveals. */
+.living-artwork {
+  pointer-events: none;
+  animation-duration: 12s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.living-artwork--float { animation-name: artwork-float; }
+.living-artwork--swim { animation-name: artwork-swim; animation-duration: 14s; }
+.living-artwork--sway {
+  animation-name: artwork-sway;
+  transform-origin: bottom center;
+  animation-duration: 16s;
+}
+.living-artwork--breathe { animation-name: artwork-breathe; animation-duration: 18s; }
+@keyframes artwork-float {
+  0%, 100% { translate: 0 0; rotate: -0.5deg; }
+  50% { translate: 0 -10px; rotate: 0.5deg; }
+}
+@keyframes artwork-swim {
+  0%, 100% { translate: -6px 0; rotate: -1deg; }
+  50% { translate: 6px -14px; rotate: 1deg; }
+}
+@keyframes artwork-sway {
+  0%, 100% { rotate: -0.6deg; }
+  50% { rotate: 0.6deg; }
+}
+@keyframes artwork-breathe {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.025; }
+}
+@media (max-width: 767px) {
+  @keyframes artwork-float {
+    0%, 100% { translate: 0 0; }
+    50% { translate: 0 -5px; }
+  }
+  @keyframes artwork-swim {
+    0%, 100% { translate: -3px 0; rotate: -0.5deg; }
+    50% { translate: 3px -7px; rotate: 0.5deg; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .living-artwork { animation: none; }
+}

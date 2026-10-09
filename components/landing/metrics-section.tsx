@@ -1,5 +1,7 @@
 "use client";
 
+import { LivingArtwork } from "./living-artwork";
+
 import { useEffect, useState, useRef } from "react";
 
 const metrics = [
@@ -270,7 +272,7 @@ export function MetricsSection() {
         <div className={`w-full mb-0 transition-all duration-1000 delay-200 ${
           isVisible ? "opacity-100" : "opacity-0"
         }`}>
-          <img
+          <LivingArtwork motion="breathe"
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/real-time-graph-INFmn3u0MlUwvNPynoIhwxtPaPjxM5.png"
             alt=""
             aria-hidden="true"

@@ -1,5 +1,7 @@
 "use client";
 
+import { LivingArtwork } from "./living-artwork";
+
 import { useEffect, useRef, useState } from "react";
 
 const steps = [
@@ -98,7 +100,7 @@ export function HowItWorksSection() {
           <div className={`relative h-[320px] lg:h-[640px] overflow-hidden transition-all duration-1000 delay-200 ${
             isVisible ? "opacity-100" : "opacity-0"
           }`}>
-            <img
+            <LivingArtwork motion="sway"
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/tree-uAia6REvB137CQyHFCf0za3O6h2zKO.png"
               alt=""
               aria-hidden="true"

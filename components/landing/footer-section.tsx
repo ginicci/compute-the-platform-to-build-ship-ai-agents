@@ -1,5 +1,7 @@
 "use client";
 
+import { LivingArtwork } from "./living-artwork";
+
 import { ArrowUpRight } from "lucide-react";
 import { LanguagePicker } from "@/components/i18n/language-picker";
 import { useEffect, useRef } from "react";
@@ -98,7 +100,7 @@ export function FooterSection() {
     <footer className="relative bg-black">
       {/* Panoramic banner image */}
       <div className="relative w-full h-[340px] md:h-[420px] overflow-hidden">
-        <img
+        <LivingArtwork motion="breathe"
           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Upscaled%20Image%20%2810%29-UnDKstODkIENp5xqTYUEpt0Sm8tNOw.png"
           alt="Bioluminescent landscape"
           className="w-full h-full object-cover object-center"
