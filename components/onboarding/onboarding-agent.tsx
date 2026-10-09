@@ -22,7 +22,7 @@ function limitCode(error: Error | undefined) {
   if (!error) return null
   try {
     const code = JSON.parse(error.message)?.code
-    return code === 'task_limit' || code === 'agent_locked' ? code : null
+    return ['task_limit', 'agent_locked', 'terms_required', 'sign_in_required'].includes(code) ? code : null
   } catch {
     return null
   }
@@ -45,6 +45,7 @@ export function OnboardingAgent({ plan }: { plan: AgentPlan }) {
           </Link>
         </div>
         <UsageMeter used={tasksUsed} limit={plan.tasksLimit} />
+        <p className="text-xs text-muted-foreground">AI guidance, plans, and drafts. This chat does not book services, make payments, or send messages for you.</p>
         <nav aria-label="Agent categories" className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
           <ul className="flex w-max gap-2">
             {AGENTS.map((item) => {
@@ -281,12 +282,26 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
           </div>
         )}
 
+        {errorCode === 'agent_locked' && (
+          <UpgradePanel title="This agent is not included in your plan" body="Check your current plan or upgrade to access this agent." />
+        )}
+        {errorCode === 'terms_required' && (
+          <div role="alert" className="border border-border px-4 py-3 text-sm">
+            Please <Link href="/onboarding" className="underline">review and accept the terms</Link> before chatting.
+          </div>
+        )}
+        {errorCode === 'sign_in_required' && (
+          <div role="alert" className="border border-border px-4 py-3 text-sm">
+            Your session has expired. <Link href="/sign-in" className="underline">Sign in again</Link> to continue.
+          </div>
+        )}
         {error && !errorCode && (
           <div role="alert" className="flex items-center justify-between gap-3 border border-destructive/50 px-4 py-3 text-sm text-foreground">
-            <span>{'Something went wrong. Please try again.'}</span>
+            <span>{'The reply could not be completed. Please retry. If it keeps failing, start a new conversation by switching agents.'}</span>
             <Button
               size="sm"
               variant="outline"
+              disabled={busy || blocked}
               onClick={() => {
                 onSend()
                 regenerate({ body: { agentId } })
