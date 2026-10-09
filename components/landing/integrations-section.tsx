@@ -1,5 +1,7 @@
 "use client";
 
+import { LivingArtwork } from "./living-artwork";
+
 import { useEffect, useState, useRef } from "react";
 
 const logos: Record<string, React.ReactNode> = {
@@ -130,7 +132,7 @@ export function IntegrationsSection() {
       <div className={`relative left-1/2 -translate-x-1/2 w-screen -mt-16 transition-all duration-1000 delay-200 ${
         isVisible ? "opacity-100" : "opacity-0"
       }`}>
-        <img
+        <LivingArtwork motion="breathe"
           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/connection-KeJwWPQvn6l0a7C48tCARYtNEdC92H.png"
           alt=""
           aria-hidden="true"

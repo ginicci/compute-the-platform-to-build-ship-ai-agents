@@ -1,5 +1,7 @@
 "use client";
 
+import { LivingArtwork } from "./living-artwork";
+
 import { useState, useEffect, useRef } from "react";
 
 const features = [
@@ -46,7 +48,7 @@ export function DevelopersSection() {
           isVisible ? "opacity-100" : "opacity-0"
         }`}
       >
-        <img
+        <LivingArtwork motion="float"
           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Upscaled%20Image%20%2813%29-OQ2DiR3ElVsUg8kTvTL1kC5A3Q6maM.png"
           alt=""
           aria-hidden="true"

@@ -1,5 +1,7 @@
 "use client";
 
+import { LivingArtwork } from "./living-artwork";
+
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -88,7 +90,7 @@ export function CtaSection() {
 
               {/* Right image */}
               <div className="hidden lg:flex items-end justify-center w-[600px] h-[650px] -mr-16">
-                <img
+                <LivingArtwork motion="sway"
                   src="/images/bridge.png"
                   alt="Two trees connected by glowing arcs"
                   className="w-full h-full object-contain object-bottom"
