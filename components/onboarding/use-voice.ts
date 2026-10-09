@@ -31,13 +31,17 @@ export function useVoiceInput({
   const [status, setStatus] = useState<VoiceStatus>('idle')
   const [error, setError] = useState<string | null>(null)
   const recorderRef = useRef<MediaRecorder | null>(null)
+  const startingRef = useRef(false)
+  const mountedRef = useRef(true)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const supported =
     typeof window !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined'
 
   useEffect(() => {
+    mountedRef.current = true
     return () => {
+      mountedRef.current = false
       if (timerRef.current) clearTimeout(timerRef.current)
       const recorder = recorderRef.current
       if (recorder && recorder.state !== 'inactive') {
@@ -74,18 +78,33 @@ export function useVoiceInput({
   }
 
   const start = async () => {
-    if (status !== 'idle') return
+    if (status !== 'idle' || startingRef.current) return
+    startingRef.current = true
     setError(null)
     let stream: MediaStream
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     } catch {
+      startingRef.current = false
+      if (!mountedRef.current) return
       setError('Microphone access was blocked. Allow it in your browser settings to talk to the agent.')
       return
     }
 
+    startingRef.current = false
+    if (!mountedRef.current) {
+      stream.getTracks().forEach((track) => track.stop())
+      return
+    }
     const mimeType = pickMimeType()
-    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+    let recorder: MediaRecorder
+    try {
+      recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+    } catch {
+      stream.getTracks().forEach((track) => track.stop())
+      setError('Recording is not supported by this browser. Please type your message instead.')
+      return
+    }
     const chunks: Blob[] = []
     recorder.ondataavailable = (event) => {
       if (event.data.size > 0) chunks.push(event.data)
@@ -103,7 +122,15 @@ export function useVoiceInput({
     }
 
     recorderRef.current = recorder
-    recorder.start()
+    try {
+      recorder.start()
+    } catch {
+      recorderRef.current = null
+      recorder.onstop = null
+      stream.getTracks().forEach((track) => track.stop())
+      setError('Could not start recording. Please type your message instead.')
+      return
+    }
     setStatus('recording')
     timerRef.current = setTimeout(() => stop(), MAX_RECORDING_MS)
   }
@@ -130,8 +157,11 @@ export function useReadAloud({
   const [error, setError] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const urlRef = useRef<string | null>(null)
+  const requestRef = useRef<AbortController | null>(null)
 
   const cleanup = () => {
+    requestRef.current?.abort()
+    requestRef.current = null
     audioRef.current?.pause()
     audioRef.current = null
     if (urlRef.current) URL.revokeObjectURL(urlRef.current)
@@ -149,8 +179,11 @@ export function useReadAloud({
     cleanup()
     setError(null)
     setLoadingId(id)
+    const controller = new AbortController()
+    requestRef.current = controller
     try {
       const response = await fetch('/api/voice/speak', {
+        signal: controller.signal,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, agentId }),
@@ -162,7 +195,9 @@ export function useReadAloud({
         return
       }
       onTaskUsed()
-      const url = URL.createObjectURL(await response.blob())
+      const blob = await response.blob()
+      if (controller.signal.aborted) return
+      const url = URL.createObjectURL(blob)
       const audio = new Audio(url)
       urlRef.current = url
       audioRef.current = audio
@@ -170,10 +205,11 @@ export function useReadAloud({
       setActiveId(id)
       await audio.play()
     } catch {
+      if (controller.signal.aborted) return
       cleanup()
       setError('Could not play this reply. Tap the speaker to try again.')
     } finally {
-      setLoadingId(null)
+      if (requestRef.current === controller || !controller.signal.aborted) setLoadingId(null)
     }
   }
 
