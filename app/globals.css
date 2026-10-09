@@ -223,13 +223,17 @@ html[data-i18n-pending] body {
   display: none !important;
   -webkit-appearance: none;
 }
+/* Shift the pink foliage in the decorative video toward vivid red. */
+.hero-background-video {
+  filter: hue-rotate(40deg) saturate(2);
+}
 .hero-petal {
   position: absolute;
   top: -5%;
   width: 7px;
   height: 11px;
   border-radius: 80% 10% 80% 10%;
-  background: #eca8d6;
+  background: #ff2020;
   opacity: 0;
   animation: hero-petal-fall linear infinite;
 }
