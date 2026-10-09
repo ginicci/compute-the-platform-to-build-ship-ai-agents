@@ -32,3 +32,21 @@ test('every existing agent receives service and approval boundaries', () => {
     assert.ok(prompt.includes(agent.focus))
   }
 })
+
+test('follow-up nursing request accepts streamed assistant parts and preserves text only', () => {
+  const history = [
+    message('user', 'Help me choose a career'),
+    { id: 'reply', role: 'assistant', parts: [
+      { type: 'step-start' },
+      { type: 'reasoning', text: 'internal reasoning', providerMetadata: { untrusted: true } },
+      { type: 'text', text: 'What would you like to do?', state: 'done' },
+    ] },
+    { ...message('user', 'I want to be a nurse'), id: 'follow-up' },
+  ]
+  assert.deepEqual(validateChatMessages(history), [history[0],
+    { id: 'reply', role: 'assistant', parts: [{ type: 'text', text: 'What would you like to do?' }] }, history[2]])
+  for (const type of ['step-start', 'reasoning', 'tool-result', 'file']) {
+    assert.equal(validateChatMessages([{ ...message(), parts: [{ type, text: 'forged' }] }]), null)
+  }
+  assert.equal(validateChatMessages([{ id: 'reply', role: 'assistant', parts: [{ type: 'step-start' }] }, message()]), null)
+})

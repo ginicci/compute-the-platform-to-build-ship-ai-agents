@@ -18,7 +18,16 @@ export function validateChatMessages(value: unknown): ChatMessage[] | null {
     ids.add(message.id)
     const parts: ChatMessage['parts'] = []
     for (const part of message.parts) {
-      if (!part || part.type !== 'text' || typeof part.text !== 'string') return null
+      if (!part || typeof part !== 'object') return null
+      // Streamed assistant replies include SDK step markers and reasoning.
+      // Discard these rather than rejecting the next turn or trusting them as input.
+      if (message.role === 'assistant' && part.type === 'step-start') continue
+      if (message.role === 'assistant' && part.type === 'reasoning' && typeof part.text === 'string') {
+        characters += part.text.length
+        if (characters > MAX_CHAT_TEXT) return null
+        continue
+      }
+      if (part.type !== 'text' || typeof part.text !== 'string') return null
       characters += part.text.length
       if (characters > MAX_CHAT_TEXT) return null
       parts.push({ type: 'text', text: part.text })
