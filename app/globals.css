@@ -216,3 +216,29 @@ html[data-i18n-pending] body {
     opacity: 1;
   }
 }
+
+/* The hero is decorative, never an interactive media player. */
+.hero-background-video::-webkit-media-controls,
+.hero-background-video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+.hero-petal {
+  position: absolute;
+  top: -5%;
+  width: 7px;
+  height: 11px;
+  border-radius: 80% 10% 80% 10%;
+  background: #eca8d6;
+  opacity: 0;
+  animation: hero-petal-fall linear infinite;
+}
+@keyframes hero-petal-fall {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
+  10% { opacity: .55; }
+  85% { opacity: .4; }
+  100% { transform: translate3d(-100px, 100vh, 0) rotate(320deg); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-petal { animation: none; display: none; }
+}

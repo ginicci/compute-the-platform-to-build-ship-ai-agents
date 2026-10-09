@@ -105,11 +105,22 @@ function BlurWord({ word, trigger }: { word: string; trigger: number }) {
 }
 
 export function HeroSection() {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [wordIndex, setWordIndex] = useState(0);
 
   useEffect(() => {
     setIsVisible(true);
+    const video = videoRef.current;
+    const play = () => {
+      if (video && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        video.muted = true;
+        void video.play().catch(() => { /* Decorative petals remain animated if autoplay is blocked. */ });
+      }
+    };
+    play();
+    window.addEventListener('pointerdown', play, { once: true });
+    return () => window.removeEventListener('pointerdown', play);
   }, []);
 
   useEffect(() => {
@@ -124,15 +135,28 @@ export function HeroSection() {
       {/* Background video */}
       <div className="absolute inset-0 z-0">
         <video
+          ref={videoRef}
+          controls={false}
+          disablePictureInPicture
+          tabIndex={-1}
           autoPlay
           muted
           loop
           playsInline
           aria-hidden="true"
-          className="w-full h-full object-cover object-center opacity-80"
+          className="hero-background-video pointer-events-none w-full h-full object-cover object-center opacity-80"
         >
           <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/bg-hero-0BnFGdr81Ifnj3WbBZoNt1KE4D5DMT.mp4" type="video/mp4" />
         </video>
+        <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 18 }, (_, i) => (
+            <span key={i} className="hero-petal" style={{
+              left: `${45 + ((i * 17) % 55)}%`,
+              animationDuration: `${8 + (i % 6)}s`,
+              animationDelay: `${-i * 0.9}s`,
+            }} />
+          ))}
+        </div>
         {/* Subtle overlay to ensure text readability on the left */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
