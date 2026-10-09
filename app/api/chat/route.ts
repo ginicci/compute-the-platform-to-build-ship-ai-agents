@@ -12,7 +12,7 @@ export const maxDuration = 60
 export async function POST(request: Request) {
   const session = await getUserSession()
   if (!session?.user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    return Response.json({ error: 'Unauthorized', code: 'sign_in_required' }, { status: 401 })
   }
 
   let input: unknown
