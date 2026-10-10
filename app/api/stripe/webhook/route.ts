@@ -1,3 +1,4 @@
+import { enqueueBillingEvent } from '@/lib/billing-inbox'
 import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { syncSubscription } from '@/lib/subscriptions'
@@ -16,6 +17,16 @@ export async function POST(request: Request) {
     event = stripe.webhooks.constructEvent(await request.text(), signature, secret)
   } catch {
     return new Response('Invalid signature', { status: 400 })
+  }
+
+  if (process.env.BILLING_LEDGER_ENABLED === 'true') {
+    try {
+      const result = await enqueueBillingEvent(event)
+      return Response.json({ received: true, queued: result.queued })
+    } catch {
+      console.error('Billing inbox intake failed')
+      return new Response('Billing intake unavailable', { status: 503 })
+    }
   }
 
   try {
