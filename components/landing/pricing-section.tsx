@@ -88,7 +88,7 @@ export function PricingSection() {
             ))}
           </div>
           <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Save 20% yearly · Free trial on every paid plan
+            Proposed pricing only · Checkout paused · Text trial: 5 total, 3/day
           </span>
         </div>
 

@@ -5,11 +5,9 @@ import { db } from '@/lib/db'
 import { agentUsage } from '@/lib/db-schema'
 import { agentIdsForLimit, type AgentId } from '@/lib/agents'
 import { isOwnerEmail } from '@/lib/owner'
-import { getLatestSubscription, hasAccess } from '@/lib/subscriptions'
-import { getTier, TIERS, type Tier } from '@/lib/tiers'
+import { TIERS, type Tier } from '@/lib/tiers'
 
 const FREE_TIER = TIERS[0]
-const OWNER_TIER = TIERS.find((tier) => tier.id === 'pro') ?? FREE_TIER
 
 export type PlanContext = {
   tier: Tier
@@ -26,13 +24,7 @@ function currentPeriod() {
 
 export async function getPlanContext(user: { id: string; email: string }): Promise<PlanContext> {
   const isOwner = isOwnerEmail(user.email)
-  let tier = FREE_TIER
-  if (isOwner) {
-    tier = OWNER_TIER
-  } else {
-    const sub = await getLatestSubscription(user.id)
-    if (sub && hasAccess(sub.status)) tier = getTier(sub.tierId) ?? FREE_TIER
-  }
+  const tier = FREE_TIER
 
   const period = currentPeriod()
   const [row] = await db
@@ -45,7 +37,7 @@ export async function getPlanContext(user: { id: string; email: string }): Promi
     tier,
     isOwner,
     allowedAgentIds: agentIdsForLimit(tier.limits.agents),
-    tasksLimit: isOwner ? null : tier.limits.tasksPerMonth,
+    tasksLimit: Math.min(tier.limits.tasksPerMonth ?? 5, 5),
     tasksUsed: row?.tasks ?? 0,
     period,
   }

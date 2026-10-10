@@ -1,3 +1,4 @@
+import { databaseTarget } from '@/lib/database-target'
 import { betterAuth } from 'better-auth'
 import { Pool } from 'pg'
 import { logActivity } from '@/lib/legal'
@@ -9,7 +10,7 @@ import { authOrigins } from '@/lib/auth-origins'
 const { baseURL, trustedOrigins } = authOrigins(process.env)
 
 export const auth = betterAuth({
-  database: new Pool({ connectionString: process.env.DATABASE_URL }),
+  database: new Pool({ connectionString: databaseTarget() }),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 12,

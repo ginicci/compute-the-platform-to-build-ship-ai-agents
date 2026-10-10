@@ -1,3 +1,5 @@
+import { launchAIEnabled, aiUnavailable, ROUTINE_MODEL, MAX_OUTPUT_TOKENS } from '@/lib/ai-policy'
+import { reserveTrialCall } from '@/lib/ai-quota'
 import { convertToModelMessages, streamText } from 'ai'
 import { after } from 'next/server'
 import { chatStreamError } from '@/lib/chat-error'
@@ -15,6 +17,8 @@ export async function POST(request: Request) {
   if (!session?.user) {
     return Response.json({ error: 'Unauthorized', code: 'sign_in_required' }, { status: 401 })
   }
+
+  if (!launchAIEnabled()) return aiUnavailable()
 
   let input: unknown
   try {
@@ -56,23 +60,28 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Monthly task limit reached', code: 'task_limit' }, { status: 429 })
   }
 
+  if (!(await reserveTrialCall(session.user.id))) {
+    return Response.json({ error: 'Trial allowance reached or usage tracking unavailable. Limit: 1 request/minute, 3/day, 5 total.', code: 'trial_limit' }, { status: 429 })
+  }
+
   const meta = await requestMeta()
   const userId = session.user.id
   const planName = plan.tier.name
 
   const result = streamText({
-    model: 'openai/gpt-5.4-mini-fast',
+    model: ROUTINE_MODEL,
     system: systemPromptFor(agent),
     messages: modelMessages,
-    maxOutputTokens: 1500,
-    providerOptions: { openai: { reasoningEffort: 'low' } },
+    maxOutputTokens: MAX_OUTPUT_TOKENS,
+    maxRetries: 0,
+    abortSignal: AbortSignal.timeout(15_000),
     onFinish: ({ finishReason, usage }) => {
       after(() =>
         logActivity({
           userId,
           event: 'agent_task_completed',
           agentId: agent.id,
-          detail: JSON.stringify({ plan: planName, finishReason, outputTokens: usage.outputTokens ?? null }),
+          detail: JSON.stringify({ plan: planName, finishReason, inputTokens: usage.inputTokens ?? null, outputTokens: usage.outputTokens ?? null, model: ROUTINE_MODEL, costStatus: 'requires_gateway_reconciliation' }),
           ...meta,
         }),
       )
