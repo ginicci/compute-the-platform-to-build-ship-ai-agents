@@ -1,3 +1,4 @@
+import { chatStreamError } from '@/lib/chat-error'
 import { generateSpeech } from 'ai'
 import { after } from 'next/server'
 import { getAgent } from '@/lib/agents'
@@ -44,6 +45,8 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('Read aloud failed', error)
+    const safeError = chatStreamError(error)
+    if (safeError.startsWith('{')) return Response.json(JSON.parse(safeError), { status: 503 })
     return Response.json({ error: 'Could not read this reply aloud' }, { status: 502 })
   }
 }
