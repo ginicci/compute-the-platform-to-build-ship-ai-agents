@@ -1,3 +1,5 @@
+import { customerBillingSummary } from '@/lib/customer-billing'
+import { getPlanContext } from '@/lib/plan-limits'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -34,7 +36,7 @@ export default async function AccountPage() {
   const session = await getUserSession()
   if (!session) redirect('/sign-in')
 
-  const current = await getLatestSubscription(session.user.id)
+  const [current, usagePlan, billing] = await Promise.all([getLatestSubscription(session.user.id), getPlanContext(session.user), customerBillingSummary(session.user.id)])
   const active = current && hasAccess(current.status) ? current : null
   const tier = getTier(active?.tierId ?? 'free')
 
@@ -105,6 +107,31 @@ export default async function AccountPage() {
               >
                 See plans
               </Link>
+            </>
+          )}
+        </section>
+
+        <section aria-labelledby="usage-heading" className="flex flex-col gap-3 border border-foreground/10 p-6">
+          <h2 id="usage-heading" className="font-display text-xl">AI usage</h2>
+          <p className="text-sm">{usagePlan.tasksUsed} requests recorded this month.</p>
+          <p className="text-sm text-muted-foreground">Access also requires available funding and server-side spending limits. A subscription alone does not guarantee AI availability.</p>
+          {billing && (
+            <>
+              {billing.environment === 'test' && <p role="status">Test environment — not live billing.</p>}
+              <h3 className="font-medium">Payment status</h3>
+              {billing.payments.length === 0 ? <p>No collected payments recorded.</p> : (
+                <ul className="space-y-2 text-sm">{billing.payments.map(payment => (
+                  <li key={payment.payment_id}>
+                    {payment.updated_at.toLocaleDateString('en-US')}: {payment.settled ? 'Settled' : 'Awaiting settlement'}
+                    {BigInt(payment.refunded_micro_usd) > BigInt(0) && ' · Refund recorded'}
+                    {BigInt(payment.disputed_micro_usd) > BigInt(0) && ' · Disputed'}
+                  </li>
+                ))}</ul>
+              )}
+              <h3 className="font-medium">Recent AI requests</h3>
+              <ul className="space-y-2 text-sm">{billing.usage.map((request, index) => (
+                <li key={index}>{request.feature}: {request.state} · {request.created_at.toLocaleDateString('en-US')}</li>
+              ))}</ul>
             </>
           )}
         </section>

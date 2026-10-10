@@ -1,3 +1,5 @@
+import { mockAiEnabled, mockAudio, MOCK_TRANSCRIPT } from '@/lib/ai-mock'
+import { assertRealAiAllowed } from '@/lib/ai-execution-policy'
 import { finishAiRequest } from '@/lib/ai-billing'
 import { generateSpeech } from 'ai'
 import { after } from 'next/server'
@@ -22,6 +24,11 @@ export async function POST(request: Request) {
   const agentId = getAgent(String(body?.agentId ?? ''))?.id ?? null
 
   try {
+    if (mockAiEnabled(process.env)) {
+      await finishAiRequest(access.requestId, 'completed', { mock: true, providerCostMicroUsd: 0 })
+      return new Response(new Blob([new Uint8Array(mockAudio())], { type: 'audio/wav' }), { headers: { 'Content-Type': 'audio/wav', 'Cache-Control': 'no-store' } })
+    }
+    assertRealAiAllowed(process.env)
     const result = await generateSpeech({
       model: 'openai/tts-1',
       text: text.slice(0, MAX_TEXT_LENGTH),

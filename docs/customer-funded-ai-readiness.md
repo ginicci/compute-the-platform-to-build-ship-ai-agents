@@ -90,3 +90,84 @@ reconciliation and signup/login/email regressions before deployment.
 - Review the later complete implementation/report. Do not enable this draft or
   apply its migration to production. Conditional merge authorization applies
   only after ALL acceptance criteria pass, not these foundation checks.
+
+## Follow-up: latest baseline and no-provider test guard
+Latest main 8e562c7 includes PR #40; incorporated without reverting its changes.
+Set BILLING_TEST_MODE=true, AI_EXECUTION_MODE=mock, AI_BILLING_ENABLED=false
+on the isolated preview. These controls explicitly block every real provider
+invocation, including at the invocation boundary. They do NOT yet provide
+route-specific mock response fixtures, so successful AI workflows cannot yet be
+integration-tested. Real execution requires AI_EXECUTION_MODE=live, billing
+explicitly enabled, and no billing-test flag. Never enable live in test previews.
+Stripe secret modes, webhook destination access through preview protection,
+separate database identity and test-only email configuration remain unverified.
+No payment tests may begin before these isolation checks pass.
+
+## Offline fixtures and preview reconciliation
+Preview branch commit 5a666f8 was merged locally with no conflicts or discarded
+edits. PR #41 is already merged into that preview branch; continuation must use
+an independently reviewed draft PR, never update that closed PR or merge main.
+
+Successful offline chat-stream, translation, transcription and silent WAV
+fixtures now exist. They are marked TEST and cannot execute when
+VERCEL_ENV=production. Test/mock execution still passes the funding ledger,
+quota and entitlement gates. For isolated integration tests only, set
+BILLING_TEST_MODE=true, AI_EXECUTION_MODE=mock, AI_BILLING_ENABLED=true plus
+finite policy variables and synthetic test funding accounts. Real provider
+execution remains prohibited because both mock and test flags block it. Test
+funding must NOT represent real collected customer funds. This supersedes the
+prior no-fixture status; AI_BILLING_ENABLED=false remains the safe staging
+setting until test resources are verified.
+
+The branch-specific CLI environment inventory returned no overrides for
+vercel-agent/customer-funded-ai. This is not isolation proof: default Preview
+assignments may be inherited. No database connection, payment, webhook delivery
+or email test was performed. Configure and verify separate resources before
+exercising the fixtures through authenticated routes.
+
+Remaining financial implementation and full acceptance tests are still blocked/
+unimplemented as listed above. No measured-cost or margin claim is supported.
+
+## Cost-based allowance method (no pricing finalized)
+A planning calculator now computes:
+AI cost cap = price * (1 - target margin) - actual processing fees - hosting
+allocation - refund/dispute/risk reserve. Request allowance is floor(cost cap /
+validated worst-case bounded request cost). Negative budget gives zero access.
+Tests use illustrative values only, not measured Ginicci costs.
+
+Starter $9.99 and Pro $24.99 remain proposed prices. No payment rate, hosting
+allocation, target margin or measured model cost has been established. Therefore
+no evidence-based numeric paid allowance or free dollar cap is recommended yet.
+Free requests must stop at the smaller of 10/month and a separately approved
+promotional dollar cap. Free activity is subsidized, not customer-funded; it
+must also fit a global promotional budget. No real AI measurement is authorized
+by mock testing. Model catalog pricing can support conservative estimates;
+real measured usage requires separately approved bounded evaluation spending.
+
+Current PR #42 is open, draft, mergeable and unmerged. Rechecking its branch's
+Preview environment inventory returned no branch-specific variables. Required
+isolated test configuration is still absent/unverified. Payment testing paused.
+
+## Stage A follow-up: offline financial accounting core
+Implemented pure payment snapshots and deterministic reconciliation deltas:
+pending funds cannot grant access, settlement deducts processing fees, refund/
+dispute snapshots reduce funding, duplicate event IDs produce no second credit,
+and live accounting rejects synthetic/test records. Added unapplied SQL inbox,
+payment snapshot and adjustment tables with environment-scoped unique keys.
+Implemented pure provider-cost reconciliation rules: unknown costs hold funds,
+known costs release unused reserve, overruns require extra debit and freeze.
+These modules are NOT yet wired to a transactional worker or checkout/UI and
+must not be described as completed payment or cost reconciliation features.
+
+Stage B includes offline unit tests only. Stage C still requires isolated
+Stripe/database/email configuration, authenticated runtime route tests,
+transactional replay/concurrency testing and provider-boundary instrumentation.
+No migrations, funding seeds or financial API calls performed.
+
+## Authenticated billing UI integration
+Account page now queries authenticated-user-only payment snapshots and recent
+usage when BILLING_LEDGER_ENABLED=true. Default off avoids querying unapplied
+schema. It shows request counts, settlement/refund/dispute status and test-mode
+label without exposing other users' records or provider costs. Synthetic
+payments are excluded. Prepaid balance/checkout and workers remain unfinished.
+Do not enable this query gate before migration and isolation verification.

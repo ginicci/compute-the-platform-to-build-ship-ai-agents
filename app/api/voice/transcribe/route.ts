@@ -1,3 +1,5 @@
+import { mockAiEnabled, mockAudio, MOCK_TRANSCRIPT } from '@/lib/ai-mock'
+import { assertRealAiAllowed } from '@/lib/ai-execution-policy'
 import { finishAiRequest } from '@/lib/ai-billing'
 import { transcribe } from 'ai'
 import { after } from 'next/server'
@@ -28,6 +30,11 @@ export async function POST(request: Request) {
   const agentId = getAgent(String(form?.get('agentId') ?? ''))?.id ?? null
 
   try {
+    if (mockAiEnabled(process.env)) {
+      await finishAiRequest(access.requestId, 'completed', { mock: true, providerCostMicroUsd: 0 })
+      return Response.json({ text: MOCK_TRANSCRIPT })
+    }
+    assertRealAiAllowed(process.env)
     const result = await transcribe({
       model: 'openai/gpt-4o-mini-transcribe',
       audio: new Uint8Array(await audio.arrayBuffer()),
