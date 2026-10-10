@@ -1,3 +1,4 @@
+import { chatStreamError } from '@/lib/chat-error'
 import { mockAiEnabled, mockAudio, MOCK_TRANSCRIPT } from '@/lib/ai-mock'
 import { assertRealAiAllowed } from '@/lib/ai-execution-policy'
 import { finishAiRequest } from '@/lib/ai-billing'
@@ -56,6 +57,8 @@ export async function POST(request: Request) {
   } catch (error) {
     await finishAiRequest(access.requestId, 'failed')
     console.error('Voice transcription failed', error)
+    const safeError = chatStreamError(error)
+    if (safeError.startsWith('{')) return Response.json(JSON.parse(safeError), { status: 503 })
     return Response.json({ error: 'Could not understand the recording' }, { status: 502 })
   }
 }
