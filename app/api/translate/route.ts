@@ -1,3 +1,4 @@
+import { reserveAiRequest, finishAiRequest, billingErrorResponse } from '@/lib/ai-billing'
 import { createHash } from 'node:crypto'
 import { generateText } from 'ai'
 import { pool } from '@/lib/db'
@@ -40,8 +41,8 @@ function isSameOrigin(request: Request) {
   }
 }
 
-async function translateWithAI(texts: string[], languageName: string) {
-  const { text } = await generateText({
+async function translateWithAI(texts: string[], languageName: string, requestId: string) {
+  const { text, usage, providerMetadata } = await generateText({
     model: 'openai/gpt-5.4-mini-fast',
     system: [
       `You translate website interface text from English into ${languageName}.`,
@@ -52,8 +53,12 @@ async function translateWithAI(texts: string[], languageName: string) {
       'If a string is already not English or is a proper name, return it unchanged.',
     ].join(' '),
     prompt: JSON.stringify(texts),
+    maxOutputTokens: 8000,
+    maxRetries: 0,
   })
 
+  const generationId = providerMetadata?.gateway?.generationId
+  await finishAiRequest(requestId, 'completed', usage, typeof generationId === 'string' ? generationId : undefined)
   const start = text.indexOf('[')
   const end = text.lastIndexOf(']')
   const parsed: unknown = JSON.parse(text.slice(start, end + 1))
@@ -63,7 +68,8 @@ async function translateWithAI(texts: string[], languageName: string) {
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return Response.json({ error: 'Forbidden' }, { status: 403 })
-  if (!(await getUserSession())?.user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  const session = await getUserSession()
+  if (!session?.user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = (await request.json().catch(() => null)) as { locale?: unknown; texts?: unknown } | null
   const locale = findLocale(typeof body?.locale === 'string' ? body.locale : null)
@@ -90,8 +96,11 @@ export async function POST(request: Request) {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
 
   if (missing.length > 0 && missingChars <= MAX_NEW_CHARS_PER_REQUEST && takeBudget(ip, missing.length)) {
+    let reservation
+    try { reservation = await reserveAiRequest(session.user, 'translation') }
+    catch (error) { return billingErrorResponse(error) }
     try {
-      const translated = await translateWithAI(missing, locale.english)
+      const translated = await translateWithAI(missing, locale.english, reservation.id)
       const missingHashes = missing.map(hashOf)
       await pool.query(
         `INSERT INTO ui_translations (locale, source_hash, source, translated)
@@ -101,6 +110,7 @@ export async function POST(request: Request) {
       )
       missingHashes.forEach((hash, i) => known.set(hash, translated[i]))
     } catch (error) {
+      await finishAiRequest(reservation.id, 'failed')
       console.error('[translate] failed', locale.code, error)
     }
   }

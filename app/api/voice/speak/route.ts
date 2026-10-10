@@ -1,3 +1,4 @@
+import { finishAiRequest } from '@/lib/ai-billing'
 import { generateSpeech } from 'ai'
 import { after } from 'next/server'
 import { getAgent } from '@/lib/agents'
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Nothing to read' }, { status: 400 })
   }
 
-  const access = await authorizeVoiceTask()
+  const access = await authorizeVoiceTask('speech', body?.agentId)
   if (!access.ok) return access.response
 
   const agentId = getAgent(String(body?.agentId ?? ''))?.id ?? null
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
       outputFormat: 'mp3',
     })
 
+    await finishAiRequest(access.requestId, 'completed')
     const meta = await requestMeta()
     after(() =>
       logActivity({
@@ -43,6 +45,7 @@ export async function POST(request: Request) {
       headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'no-store' },
     })
   } catch (error) {
+    await finishAiRequest(access.requestId, 'failed')
     console.error('Read aloud failed', error)
     return Response.json({ error: 'Could not read this reply aloud' }, { status: 502 })
   }
