@@ -22,7 +22,7 @@ function limitCode(error: Error | undefined) {
   if (!error) return null
   try {
     const code = JSON.parse(error.message)?.code
-    return ['task_limit', 'agent_locked', 'terms_required', 'sign_in_required'].includes(code) ? code : null
+    return ['task_limit', 'agent_locked', 'terms_required', 'sign_in_required', 'service_funding_required'].includes(code) ? code : null
   } catch {
     return null
   }
@@ -293,6 +293,11 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
         {errorCode === 'sign_in_required' && (
           <div role="alert" className="border border-border px-4 py-3 text-sm">
             Your session has expired. <Link href="/sign-in" className="underline">Sign in again</Link> to continue.
+          </div>
+        )}
+        {errorCode === 'service_funding_required' && (
+          <div role="alert" className="border border-destructive/50 px-4 py-3 text-sm text-foreground">
+            AI replies are temporarily unavailable because the site's AI service needs funding. This is not a problem with your subscription or question. The site operator must restore AI credits; switching agents or retrying will not resolve it. Your question remains above.
           </div>
         )}
         {error && !errorCode && (

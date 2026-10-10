@@ -1,5 +1,6 @@
 import { convertToModelMessages, streamText } from 'ai'
 import { after } from 'next/server'
+import { chatStreamError } from '@/lib/chat-error'
 import { getAgent, systemPromptFor } from '@/lib/agents'
 import { ChatInputError, readChatBody, validateChatMessages } from '@/lib/chat-input'
 import { hasCurrentConsent, logActivity, requestMeta } from '@/lib/legal'
@@ -88,5 +89,5 @@ export async function POST(request: Request) {
     }),
   )
 
-  return result.toUIMessageStreamResponse()
+  return result.toUIMessageStreamResponse({ onError: chatStreamError })
 }
