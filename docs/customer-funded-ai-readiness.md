@@ -147,3 +147,19 @@ real measured usage requires separately approved bounded evaluation spending.
 Current PR #42 is open, draft, mergeable and unmerged. Rechecking its branch's
 Preview environment inventory returned no branch-specific variables. Required
 isolated test configuration is still absent/unverified. Payment testing paused.
+
+## Stage A follow-up: offline financial accounting core
+Implemented pure payment snapshots and deterministic reconciliation deltas:
+pending funds cannot grant access, settlement deducts processing fees, refund/
+dispute snapshots reduce funding, duplicate event IDs produce no second credit,
+and live accounting rejects synthetic/test records. Added unapplied SQL inbox,
+payment snapshot and adjustment tables with environment-scoped unique keys.
+Implemented pure provider-cost reconciliation rules: unknown costs hold funds,
+known costs release unused reserve, overruns require extra debit and freeze.
+These modules are NOT yet wired to a transactional worker or checkout/UI and
+must not be described as completed payment or cost reconciliation features.
+
+Stage B includes offline unit tests only. Stage C still requires isolated
+Stripe/database/email configuration, authenticated runtime route tests,
+transactional replay/concurrency testing and provider-boundary instrumentation.
+No migrations, funding seeds or financial API calls performed.
