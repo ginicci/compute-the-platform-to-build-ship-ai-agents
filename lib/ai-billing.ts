@@ -1,3 +1,5 @@
+import { mockAiEnabled } from '@/lib/ai-mock'
+import { realAiAllowed } from '@/lib/ai-execution-policy'
 import 'server-only'
 import { randomUUID } from 'node:crypto'
 import { pool } from '@/lib/db'
@@ -16,6 +18,7 @@ export function billingErrorResponse(error: unknown) {
 
 /** Shared by EVERY AI route; only server-verified identities and agents accepted. */
 export async function reserveAiRequest(user: { id: string; email: string }, feature: AiFeature, agentId?: AgentId) {
+  if (!realAiAllowed(process.env) && !mockAiEnabled(process.env)) throw new AiBillingError('service_unavailable', 'Real AI execution is disabled in this environment.')
   const policy = aiBillingPolicy(process.env, feature)
   if (!policy) throw new AiBillingError('service_unavailable', 'AI service is unavailable while billing protection is configured.')
   const plan = await getPlanContext(user)

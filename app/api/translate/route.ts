@@ -1,3 +1,5 @@
+import { mockAiEnabled, mockTranslations } from '@/lib/ai-mock'
+import { assertRealAiAllowed } from '@/lib/ai-execution-policy'
 import { reserveAiRequest, finishAiRequest, billingErrorResponse } from '@/lib/ai-billing'
 import { createHash } from 'node:crypto'
 import { generateText } from 'ai'
@@ -42,6 +44,11 @@ function isSameOrigin(request: Request) {
 }
 
 async function translateWithAI(texts: string[], languageName: string, requestId: string) {
+  if (mockAiEnabled(process.env)) {
+    await finishAiRequest(requestId, 'completed', { mock: true, providerCostMicroUsd: 0 })
+    return mockTranslations(texts)
+  }
+  assertRealAiAllowed(process.env)
   const { text, usage, providerMetadata } = await generateText({
     model: 'openai/gpt-5.4-mini-fast',
     system: [

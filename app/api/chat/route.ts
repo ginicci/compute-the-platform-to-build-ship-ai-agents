@@ -1,3 +1,6 @@
+import { mockAiEnabled, MOCK_REPLY } from '@/lib/ai-mock'
+import { createUIMessageStream, createUIMessageStreamResponse } from 'ai'
+import { assertRealAiAllowed } from '@/lib/ai-execution-policy'
 import { reserveAiRequest, finishAiRequest, billingErrorResponse } from '@/lib/ai-billing'
 import { convertToModelMessages, streamText } from 'ai'
 import { after } from 'next/server'
@@ -63,6 +66,18 @@ export async function POST(request: Request) {
   const userId = session.user.id
   const planName = plan.tier.name
 
+  if (mockAiEnabled(process.env)) {
+    await finishAiRequest(reservation.id, 'completed', { mock: true, providerCostMicroUsd: 0 })
+    const stream = createUIMessageStream({ execute: ({ writer }) => {
+      writer.write({ type: 'start', messageId: reservation.id })
+      writer.write({ type: 'text-start', id: 'mock-text' })
+      writer.write({ type: 'text-delta', id: 'mock-text', delta: MOCK_REPLY })
+      writer.write({ type: 'text-end', id: 'mock-text' })
+      writer.write({ type: 'finish', finishReason: 'stop' })
+    } })
+    return createUIMessageStreamResponse({ stream })
+  }
+  assertRealAiAllowed(process.env)
   const result = streamText({
     model: 'openai/gpt-5.4-mini-fast',
     system: systemPromptFor(agent),
