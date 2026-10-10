@@ -1,3 +1,4 @@
+import { reserveAiRequest, finishAiRequest, billingErrorResponse } from '@/lib/ai-billing'
 import { convertToModelMessages, streamText } from 'ai'
 import { after } from 'next/server'
 import { chatStreamError } from '@/lib/chat-error'
@@ -5,7 +6,7 @@ import { getAgent, systemPromptFor } from '@/lib/agents'
 import { ChatInputError, readChatBody, validateChatMessages } from '@/lib/chat-input'
 import { hasCurrentConsent, logActivity, requestMeta } from '@/lib/legal'
 import { isOwnerEmail } from '@/lib/owner'
-import { consumeTask, getPlanContext } from '@/lib/plan-limits'
+import { getPlanContext } from '@/lib/plan-limits'
 import { getUserSession } from '@/lib/session'
 
 export const maxDuration = 60
@@ -52,9 +53,11 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  if (!(await consumeTask(session.user.id, plan.period, plan.tasksLimit))) {
-    return Response.json({ error: 'Monthly task limit reached', code: 'task_limit' }, { status: 429 })
-  }
+  let reservation
+  try {
+    reservation = await reserveAiRequest(session.user, 'chat', agent.id)
+  } catch (error) { return billingErrorResponse(error) }
+
 
   const meta = await requestMeta()
   const userId = session.user.id
@@ -66,7 +69,14 @@ export async function POST(request: Request) {
     messages: modelMessages,
     maxOutputTokens: 1500,
     providerOptions: { openai: { reasoningEffort: 'low' } },
-    onFinish: ({ finishReason, usage }) => {
+    maxRetries: 0,
+    onError: ({ error }) => {
+      console.error('[chat] AI request failed', reservation.id)
+      after(() => finishAiRequest(reservation.id, 'failed'))
+    },
+    onFinish: async ({ finishReason, usage, providerMetadata }) => {
+      const generationId = providerMetadata?.gateway?.generationId
+      await finishAiRequest(reservation.id, 'completed', usage, typeof generationId === 'string' ? generationId : undefined)
       after(() =>
         logActivity({
           userId,

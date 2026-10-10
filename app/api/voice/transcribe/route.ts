@@ -1,3 +1,4 @@
+import { finishAiRequest } from '@/lib/ai-billing'
 import { transcribe } from 'ai'
 import { after } from 'next/server'
 import { getAgent } from '@/lib/agents'
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unsupported audio format' }, { status: 415 })
   }
 
-  const access = await authorizeVoiceTask()
+  const access = await authorizeVoiceTask('transcription', form?.get('agentId'))
   if (!access.ok) return access.response
 
   const agentId = getAgent(String(form?.get('agentId') ?? ''))?.id ?? null
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
       audio: new Uint8Array(await audio.arrayBuffer()),
     })
 
+    await finishAiRequest(access.requestId, 'completed')
     const meta = await requestMeta()
     after(() =>
       logActivity({
@@ -45,6 +47,7 @@ export async function POST(request: Request) {
 
     return Response.json({ text: result.text.trim() })
   } catch (error) {
+    await finishAiRequest(access.requestId, 'failed')
     console.error('Voice transcription failed', error)
     return Response.json({ error: 'Could not understand the recording' }, { status: 502 })
   }
