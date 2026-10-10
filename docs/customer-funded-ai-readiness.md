@@ -127,3 +127,23 @@ exercising the fixtures through authenticated routes.
 
 Remaining financial implementation and full acceptance tests are still blocked/
 unimplemented as listed above. No measured-cost or margin claim is supported.
+
+## Cost-based allowance method (no pricing finalized)
+A planning calculator now computes:
+AI cost cap = price * (1 - target margin) - actual processing fees - hosting
+allocation - refund/dispute/risk reserve. Request allowance is floor(cost cap /
+validated worst-case bounded request cost). Negative budget gives zero access.
+Tests use illustrative values only, not measured Ginicci costs.
+
+Starter $9.99 and Pro $24.99 remain proposed prices. No payment rate, hosting
+allocation, target margin or measured model cost has been established. Therefore
+no evidence-based numeric paid allowance or free dollar cap is recommended yet.
+Free requests must stop at the smaller of 10/month and a separately approved
+promotional dollar cap. Free activity is subsidized, not customer-funded; it
+must also fit a global promotional budget. No real AI measurement is authorized
+by mock testing. Model catalog pricing can support conservative estimates;
+real measured usage requires separately approved bounded evaluation spending.
+
+Current PR #42 is open, draft, mergeable and unmerged. Rechecking its branch's
+Preview environment inventory returned no branch-specific variables. Required
+isolated test configuration is still absent/unverified. Payment testing paused.
