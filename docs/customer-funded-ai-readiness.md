@@ -181,3 +181,14 @@ implemented and isolated tests pass. Worker is still missing, so queued events
 would remain pending. Intake checks sandbox key prefix and event.livemode;
 these checks are not proof of database/email isolation. Live intake additionally
 requires BILLING_LIVE_ENABLED=true, not configured or authorized in this work.
+
+## Actual-cost transactional worker (not acceptance-validated)
+Added internal reconcileStoredAiRequest worker gated by AI_COST_WORKER_ENABLED.
+No public endpoint/schedule. It locks request/account rows, makes already-
+reconciled requests no-ops, releases known unused holds and freezes unknown/
+overrun accounts. Test mode rejects non-mock records and makes no Gateway lookup.
+Live lookup is separately gated and uses stored generation IDs. Actual overrun
+is recorded but outstanding debit/debt recovery remains unfinished. Audio
+requests lack generation IDs and therefore freeze instead of inventing costs.
+No worker invocation or DB migration has run. Worker runtime, deadlock recovery,
+account completeness and interrupted-stream capture need integration tests.
