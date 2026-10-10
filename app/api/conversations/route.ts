@@ -19,7 +19,7 @@ export async function PUT(request: Request) {
   // Validator requires final user message; append sentinel for stored assistant replies.
   const raw = body?.messages
   const validated = Array.isArray(raw) && raw.length <= 9 ? validateChatMessages([...raw, { id: '__history_validation__', role: 'user', parts: [{ type: 'text', text: '.' }] }]) : null
-  if (!validated || typeof body.id !== 'string' || !/^[a-f0-9-]{36}$/.test(body.id) || typeof body.title !== 'string' || body.title.length > 60) return Response.json({ error: 'Invalid request' }, { status: 400, headers })
+  if (!body || !validated || typeof body.id !== 'string' || !/^[a-f0-9-]{36}$/.test(body.id) || typeof body.title !== 'string' || body.title.length > 60) return Response.json({ error: 'Invalid request' }, { status: 400, headers })
   try {
     const result = await pool.query(`INSERT INTO pwa_conversations (id, user_id, title, messages) VALUES ($1,$2,$3,$4::jsonb)
       ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, messages = EXCLUDED.messages, updated_at = now()

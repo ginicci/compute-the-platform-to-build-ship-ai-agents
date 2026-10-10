@@ -6,7 +6,7 @@ export const USER_TRIAL_CALLS = 5
 export const GLOBAL_DAILY_CALLS = 20
 export const GLOBAL_LIFETIME_CALLS = 100
 export function launchAIEnabled(env: Record<string, string | undefined> = process.env) {
-  return env.AI_LAUNCH_CONTROLS_VERIFIED === 'true'
+  return env.VERCEL_ENV !== 'preview' && env.AI_LAUNCH_CONTROLS_VERIFIED === 'true'
 }
 export function aiUnavailable() {
   return Response.json({ error: 'AI trial is paused while spending controls are verified. Browsing is free.', code: 'ai_paused' }, { status: 503 })

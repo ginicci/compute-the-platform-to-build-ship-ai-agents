@@ -23,6 +23,8 @@ export function Assistant() {
   const { messages, setMessages, sendMessage, status, error, stop } = useChat({ transport })
   const busy = status === 'submitted' || status === 'streaming'
   const userId = session?.user.id
+  const currentUser = useRef(userId)
+  currentUser.current = userId
   useEffect(() => {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/pwa-sw.js', { updateViaCache: 'none' }).catch(() => {})
     const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition }
@@ -49,10 +51,12 @@ export function Assistant() {
   }
   async function save() {
     if (!userId || !messages.length || busy) return
+    const savingUser = userId
     const id = active || crypto.randomUUID()
     const title = messages.find(m => m.role === 'user')?.parts.filter(p => p.type === 'text').map(p => p.text).join('').slice(0, 60) || 'New chat'
     const conversation = { id, title, messages }
     const response = await fetch('/api/conversations', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(conversation) })
+    if (currentUser.current !== savingUser) return
     if (!response.ok) { setNotice('Could not save. No conversation was stored in browser storage.'); return }
     setActive(id); setHistory(prev => [conversation, ...prev.filter(c => c.id !== id)].slice(0, 20)); setNotice('Saved privately to your account.')
   }

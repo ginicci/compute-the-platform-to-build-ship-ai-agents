@@ -6,7 +6,8 @@ import { launchAIEnabled, USER_DAILY_CALLS, USER_TRIAL_CALLS, GLOBAL_DAILY_CALLS
 // refunds of reservations: this deliberately favors protecting the launch fund.
 export async function reserveTrialCall(userId: string): Promise<boolean> {
   if (!launchAIEnabled()) return false
-  const client = await pool.connect()
+  const client = await pool.connect().catch(() => null)
+  if (!client) return false
   try {
     await client.query('BEGIN')
     // Serialize the small launch cohort across all serverless instances.

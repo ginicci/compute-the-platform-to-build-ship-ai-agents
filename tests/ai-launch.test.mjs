@@ -85,3 +85,10 @@ test('mock durable quota reserves once or denies each exhausted allowance', asyn
     assert.equal(statements.at(-1), allowed ? 'COMMIT' : 'ROLLBACK')
   }
 })
+test('preview cannot enable paid AI even with inherited true flag', () => {
+ assert.equal(launchAIEnabled({VERCEL_ENV:'preview',AI_LAUNCH_CONTROLS_VERIFIED:'true'}),false)
+})
+test('database connection failure denies usage instead of escaping quota guard',async()=>{
+ const quota=loadMocked('lib/ai-quota.ts',{'server-only':{},'@/lib/db':{pool:{connect:async()=>{throw Error('offline')}}},'@/lib/ai-policy':{launchAIEnabled:()=>true}})
+ assert.equal(await quota.reserveTrialCall('test'),false)
+})

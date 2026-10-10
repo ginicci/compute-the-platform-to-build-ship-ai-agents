@@ -32,3 +32,7 @@ test('preview cannot inherit production database; isolated DB explicit only', ()
  assert.equal(databaseTarget({VERCEL_ENV:'preview',DATABASE_URL:'production',GINICCI_PWA_ISOLATED_DATABASE_URL:'isolated'}),'isolated')
  assert.equal(databaseTarget({VERCEL_ENV:'production',DATABASE_URL:'production'}),'production')
 })
+test('another account cannot overwrite a conversation ID',async()=>{
+ const route=load({'@/lib/session':{getUserSession:async()=>({user:{id:'attacker'}})},'@/lib/db':{pool:{query:async(sql,values)=>{assert.match(sql,/WHERE pwa_conversations.user_id = EXCLUDED.user_id/);assert.equal(values[1],'attacker');return {rows:[]}}}},'@/lib/chat-input':{readChatBody:async()=>({id:'00000000-0000-0000-0000-000000000000',title:'test',messages:[{id:'one',role:'user',parts:[{type:'text',text:'Hello'}]}]}),validateChatMessages:v=>v}})
+ assert.equal((await route.PUT(new Request('https://example.com/api/conversations',{method:'PUT',headers:{origin:'https://example.com'}}))).status,403)
+})
