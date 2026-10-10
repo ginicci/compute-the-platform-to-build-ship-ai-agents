@@ -163,3 +163,11 @@ Stage B includes offline unit tests only. Stage C still requires isolated
 Stripe/database/email configuration, authenticated runtime route tests,
 transactional replay/concurrency testing and provider-boundary instrumentation.
 No migrations, funding seeds or financial API calls performed.
+
+## Authenticated billing UI integration
+Account page now queries authenticated-user-only payment snapshots and recent
+usage when BILLING_LEDGER_ENABLED=true. Default off avoids querying unapplied
+schema. It shows request counts, settlement/refund/dispute status and test-mode
+label without exposing other users' records or provider costs. Synthetic
+payments are excluded. Prepaid balance/checkout and workers remain unfinished.
+Do not enable this query gate before migration and isolation verification.
