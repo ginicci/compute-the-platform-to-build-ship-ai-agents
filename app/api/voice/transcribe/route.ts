@@ -1,3 +1,4 @@
+import { chatStreamError } from '@/lib/chat-error'
 import { transcribe } from 'ai'
 import { after } from 'next/server'
 import { getAgent } from '@/lib/agents'
@@ -46,6 +47,8 @@ export async function POST(request: Request) {
     return Response.json({ text: result.text.trim() })
   } catch (error) {
     console.error('Voice transcription failed', error)
+    const safeError = chatStreamError(error)
+    if (safeError.startsWith('{')) return Response.json(JSON.parse(safeError), { status: 503 })
     return Response.json({ error: 'Could not understand the recording' }, { status: 502 })
   }
 }
