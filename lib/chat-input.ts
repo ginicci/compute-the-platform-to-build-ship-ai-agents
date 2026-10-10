@@ -1,12 +1,12 @@
 // Text-only boundary for the existing UI. Tool results and system prompts must
 // eventually come from server-owned workflow state, never client messages.
-export const MAX_CHAT_BYTES = 128 * 1024
-export const MAX_CHAT_TEXT = 40_000
+export const MAX_CHAT_BYTES = 16 * 1024
+export const MAX_CHAT_TEXT = 4_000
 
 type ChatMessage = { id: string; role: 'user' | 'assistant'; parts: { type: 'text'; text: string }[] }
 
 export function validateChatMessages(value: unknown): ChatMessage[] | null {
-  if (!Array.isArray(value) || value.length === 0 || value.length > 60) return null
+  if (!Array.isArray(value) || value.length === 0 || value.length > 10) return null
   let characters = 0
   const ids = new Set<string>()
   const messages: ChatMessage[] = []

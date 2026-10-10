@@ -5,6 +5,8 @@ import { syncSubscription } from '@/lib/subscriptions'
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
+  if (process.env.VERCEL_ENV === 'preview') return Response.json({ error: 'Billing disabled in PWA preview' }, { status: 503 })
+
   const secret = process.env.STRIPE_WEBHOOK_SECRET
   if (!secret) return new Response('Webhook not configured', { status: 503 })
 

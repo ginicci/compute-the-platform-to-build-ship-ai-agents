@@ -53,7 +53,7 @@ const nextConfig = {
     ]
   },
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }]
+    return [{ source: '/:path*', headers: securityHeaders }, { source: '/pwa-sw.js', headers: [{ key: 'Cache-Control', value: 'no-store' }] }, { source: '/assistant', headers: [{ key: 'Cache-Control', value: 'private, no-store' }] }]
   },
 }
 

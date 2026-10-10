@@ -38,5 +38,5 @@ export function authOrigins(env: Environment) {
     ),
     ...(development ? ['http://localhost:3000'] : []),
   ].filter((origin): origin is string => Boolean(origin)))]
-  return { baseURL: configured || 'https://ginicci.app', trustedOrigins }
+  return { baseURL: env.VERCEL_ENV === 'preview' && env.VERCEL_URL ? `https://${env.VERCEL_URL}` : configured || 'https://ginicci.app', trustedOrigins }
 }
