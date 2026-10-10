@@ -171,3 +171,13 @@ schema. It shows request counts, settlement/refund/dispute status and test-mode
 label without exposing other users' records or provider costs. Synthetic
 payments are excluded. Prepaid balance/checkout and workers remain unfinished.
 Do not enable this query gate before migration and isolation verification.
+
+## Durable webhook intake integration
+When BILLING_LEDGER_ENABLED=true, the existing signature-verified webhook
+routes to an environment-checked, durable inbox with unique event IDs. No
+incoming event grants funding. This replaces legacy subscription sync ONLY
+when that gate is explicitly enabled; keep disabled until the worker is
+implemented and isolated tests pass. Worker is still missing, so queued events
+would remain pending. Intake checks sandbox key prefix and event.livemode;
+these checks are not proof of database/email isolation. Live intake additionally
+requires BILLING_LIVE_ENABLED=true, not configured or authorized in this work.
