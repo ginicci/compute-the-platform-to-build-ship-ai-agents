@@ -1,8 +1,7 @@
 import { PricingCards, type PricingPlan } from './pricing-cards'
-import { pricedPlans } from '@/lib/premium-billing'
 import { TIERS } from '@/lib/tiers'
 export async function PricingSection() {
-  const configured = await pricedPlans().catch(() => [])
+  const configured = await import('@/lib/premium-billing').then(({ pricedPlans }) => pricedPlans()).catch(() => [])
   const plans: PricingPlan[] = [{
     ...TIERS[0], limits: { agents: 9, tasksPerMonth: 6 }, trialDays: 0,
     features: ['Six successful premium uses per account', 'All nine specialist agents during trial', 'Same premium model and output quality', 'Free browsing and saved results', 'No card required'],

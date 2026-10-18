@@ -10,9 +10,7 @@ const navLinks = [
   { name: "Ecosystem", href: "#infra" },
   { name: "How it works", href: "#integrations" },
   { name: "Commitments", href: "#security" },
-  { name: "Open the App", href: "/assistant" },
-  { name: "Install the App", href: "/install" },
-  { name: "Use the Website", href: "/onboarding" },
+  { name: "Premium", href: "/pricing" },
 ];
 
 export function Navigation() {
@@ -43,18 +41,18 @@ export function Navigation() {
           <div className="hidden items-center gap-3 xl:flex xl:gap-5">
             {navLinks.map((link) => <a key={link.name} href={link.href} className={`text-sm transition-colors hover:text-foreground ${chrome ? "text-foreground/70" : "text-white/70 hover:text-white"}`}>{link.name}</a>)}
           </div>
-          <div className="hidden items-center gap-4 md:flex">
+          <div className="hidden items-center gap-4 xl:flex">
             <LanguagePicker tone={chrome ? "dark" : "light"} />
             <a href="/sign-in" className={`inline-flex min-h-11 items-center text-sm transition-colors ${chrome ? "text-foreground/70 hover:text-foreground" : "text-white/70 hover:text-white"}`}>Sign in</a>
             <a href="/assistant" className={`inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-medium transition-colors ${chrome ? "bg-foreground text-background hover:bg-foreground/90" : "bg-white text-black hover:bg-white/90"}`}>Start chatting</a>
           </div>
-          <a href="/assistant" className={`inline-flex min-h-11 items-center px-3 text-sm md:hidden ${chrome ? "text-foreground" : "text-white"}`}>Open App</a>
-          <button type="button" onClick={() => setIsMobileMenuOpen((open) => !open)} className={`inline-flex min-h-11 min-w-11 items-center justify-center md:hidden ${chrome ? "text-foreground" : "text-white"}`} aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"} aria-expanded={isMobileMenuOpen}>
+          <a href="/assistant" className={`inline-flex min-h-11 items-center px-3 text-sm xl:hidden ${chrome ? "text-foreground" : "text-white"}`}>Open App</a>
+          <button type="button" onClick={() => setIsMobileMenuOpen((open) => !open)} className={`inline-flex min-h-11 min-w-11 items-center justify-center xl:hidden ${chrome ? "text-foreground" : "text-white"}`} aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"} aria-expanded={isMobileMenuOpen}>
             {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
       </nav>
-      <div className={`fixed inset-0 z-[-1] bg-background transition-opacity duration-200 md:hidden ${isMobileMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`} aria-hidden={!isMobileMenuOpen}>
+      <div className={`fixed inset-0 z-[-1] bg-background transition-opacity duration-200 xl:hidden ${isMobileMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`} aria-hidden={!isMobileMenuOpen}>
         <div className="flex h-full flex-col overflow-y-auto px-6 pb-8 pt-24">
           <div className="flex flex-1 flex-col justify-center gap-4">
             {navLinks.map((link) => <a key={link.name} href={link.href} onClick={() => setIsMobileMenuOpen(false)} className="py-2 font-display text-4xl leading-none text-foreground sm:text-5xl">{link.name}</a>)}

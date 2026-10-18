@@ -242,6 +242,7 @@ export function MetricsSection() {
 
   return (
     <section ref={sectionRef} className="relative py-32 lg:py-40 overflow-hidden">
+      <p className="relative z-10 mx-auto max-w-[1400px] px-6 pb-8 text-sm lg:px-12">Illustrative design figures — not measured performance or service guarantees.</p>
       <GridBackground />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12">

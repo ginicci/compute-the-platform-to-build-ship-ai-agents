@@ -79,6 +79,7 @@ export function TestimonialsSection() {
 
   return (
     <section ref={sectionRef} className="relative py-32 lg:py-40 bg-foreground text-background overflow-hidden">
+      <p className="relative z-10 mx-auto max-w-[1400px] px-6 pb-8 text-sm lg:px-12">Illustrative scenarios — fictional names and example outcomes, not customer testimonials.</p>
       {/* ASCII background pattern */}
       <div className="absolute inset-0 font-mono text-[10px] text-background/[0.02] leading-tight overflow-hidden whitespace-pre select-none">
         {Array.from({ length: 60 }, (_, i) => 
