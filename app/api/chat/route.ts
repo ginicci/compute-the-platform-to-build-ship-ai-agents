@@ -1,3 +1,5 @@
+import { premiumEnabled } from '@/lib/premium-policy'
+import { premiumChat } from '@/lib/premium-chat'
 import { launchAIEnabled, aiUnavailable, ROUTINE_MODEL, MAX_OUTPUT_TOKENS } from '@/lib/ai-policy'
 import { reserveTrialCall } from '@/lib/ai-quota'
 import { convertToModelMessages, streamText } from 'ai'
@@ -18,6 +20,9 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized', code: 'sign_in_required' }, { status: 401 })
   }
 
+  if (premiumEnabled()) return premiumChat(request, session.user.id)
+
+  if (process.env.PREMIUM_TRIAL_ENABLED === 'true') return aiUnavailable()
   if (!launchAIEnabled()) return aiUnavailable()
 
   let input: unknown

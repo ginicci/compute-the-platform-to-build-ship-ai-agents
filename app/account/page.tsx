@@ -1,3 +1,5 @@
+import { PremiumAccessBanner } from '@/components/premium/access-banner'
+import { premiumPaidAccess } from '@/lib/premium-billing'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -5,7 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import { ManageBillingButton } from '@/components/account/manage-billing-button'
 import { isOwnerEmail } from '@/lib/owner'
 import { getUserSession } from '@/lib/session'
-import { getLatestSubscription, hasAccess } from '@/lib/subscriptions'
+import { getLatestSubscription } from '@/lib/subscriptions'
 import { formatDollars, getTier } from '@/lib/tiers'
 
 export const metadata: Metadata = {
@@ -35,7 +37,8 @@ export default async function AccountPage() {
   if (!session) redirect('/sign-in')
 
   const current = await getLatestSubscription(session.user.id)
-  const active = current && hasAccess(current.status) ? current : null
+  const verified = await premiumPaidAccess(session.user.id).catch(() => null)
+  const active = verified && current ? current : null
   const tier = getTier(active?.tierId ?? 'free')
 
   let renewalNote: string | null = null
@@ -74,6 +77,7 @@ export default async function AccountPage() {
           <p className="break-all text-sm text-muted-foreground">{session.user.email}</p>
         </header>
 
+        <PremiumAccessBanner />
         <section aria-labelledby="plan-heading" className="flex flex-col gap-4 border border-foreground/10 p-6">
           <div className="flex items-center justify-between gap-4">
             <h2 id="plan-heading" className="font-display text-xl">
@@ -100,7 +104,7 @@ export default async function AccountPage() {
                 {"You're on the Free plan. Upgrade for more agents and tasks."}
               </p>
               <Link
-                href="/#pricing"
+                href="/pricing"
                 className="inline-flex min-h-11 items-center justify-center bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
               >
                 See plans
@@ -108,6 +112,8 @@ export default async function AccountPage() {
             </>
           )}
         </section>
+
+        {current && !active && <ManageBillingButton />}
 
         {isOwnerEmail(session.user.email) && (
           <Link

@@ -1,3 +1,4 @@
+import { premiumEnabled } from '@/lib/premium-policy'
 import { redirect } from 'next/navigation'
 import { TermsGate } from '@/components/legal/terms-gate'
 import { OnboardingAgent } from '@/components/onboarding/onboarding-agent'
@@ -13,7 +14,7 @@ export default async function OnboardingPage() {
   const isOwner = isOwnerEmail(session.user.email)
   const [plan, agreed] = await Promise.all([
     getPlanContext(session.user),
-    isOwner ? Promise.resolve(true) : hasCurrentConsent(session.user.id),
+    isOwner && !premiumEnabled() ? Promise.resolve(true) : hasCurrentConsent(session.user.id),
   ])
 
   if (!agreed) {
@@ -29,6 +30,7 @@ export default async function OnboardingPage() {
       <OnboardingAgent
         plan={{
           name: plan.tier.name,
+          premiumTrial: premiumEnabled(),
           allowedAgentIds: plan.allowedAgentIds,
           tasksLimit: plan.tasksLimit,
           tasksUsed: plan.tasksUsed,

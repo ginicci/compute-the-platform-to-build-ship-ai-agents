@@ -1,6 +1,7 @@
 'use server'
 
 import { headers } from 'next/headers'
+import { requireTestBilling, premiumPaidAccess } from '@/lib/premium-billing'
 import { revalidatePath } from 'next/cache'
 import { getUserSession } from '@/lib/session'
 import { siteUrl } from '@/lib/site'
@@ -15,6 +16,7 @@ async function requireUserId() {
 
 // Records the plan right after checkout so it doesn't depend on webhook timing.
 export async function confirmCheckout(sessionId: string) {
+  requireTestBilling()
   const userId = await requireUserId()
   if (typeof sessionId !== 'string' || !/^cs_[A-Za-z0-9_]{10,250}$/.test(sessionId)) {
     throw new Error('Invalid checkout session')
@@ -22,13 +24,13 @@ export async function confirmCheckout(sessionId: string) {
 
   const checkout = await stripe.checkout.sessions.retrieve(sessionId)
   if (checkout.metadata?.userId !== userId) throw new Error('Unauthorized')
-  if (!checkout.subscription) return { ok: false }
+  if (checkout.livemode || checkout.payment_status !== 'paid' || !checkout.subscription) return { ok: false }
 
   const subscriptionId =
     typeof checkout.subscription === 'string' ? checkout.subscription : checkout.subscription.id
   await syncSubscription(subscriptionId)
   revalidatePath('/account')
-  return { ok: true }
+  return { ok: !!(await premiumPaidAccess(userId)) }
 }
 
 export async function openBillingPortal() {

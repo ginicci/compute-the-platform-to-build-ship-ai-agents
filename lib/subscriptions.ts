@@ -8,7 +8,7 @@ import { stripe } from '@/lib/stripe'
 import { getTier } from '@/lib/tiers'
 import { formatCents, sendOwnerAlert } from '@/lib/owner-alerts'
 
-export const ACCESS_STATUSES = ['active', 'trialing', 'past_due'] as const
+export const ACCESS_STATUSES = ['active'] as const
 
 export function hasAccess(status: string) {
   return (ACCESS_STATUSES as readonly string[]).includes(status)
