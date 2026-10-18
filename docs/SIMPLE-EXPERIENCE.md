@@ -42,3 +42,7 @@ No new environment variables, migrations, services or provider permissions are r
 Enter secrets through protected project settings, never source control or chat. Keep production variables and live billing unchanged. Hosting/builds, database, email, AI text and experimental realtime calls may incur their providers' usage charges; this follow-up makes no paid provider calls and adds no recurring service. Exact usage cost depends on configured models, tokens/audio, provider rates and account contracts; no unsupported fixed cost estimate or unlimited-use promise is made.
 
 Obtain separate explicit approval before merging, production deployment/migration, live billing or production voice activation.
+
+## External acceptance handoff
+
+Start with [`acceptance/PR49-RUNBOOK.md`](acceptance/PR49-RUNBOOK.md), copy [`acceptance/PR49-EVIDENCE.csv`](acceptance/PR49-EVIDENCE.csv) to a private test register, and review [`acceptance/LINT-BASELINE.md`](acceptance/LINT-BASELINE.md). All external tests start NOT RUN; environment operators must attest isolation before any paid-provider test. The ESLint command is now configured and executable but exposes existing baseline findings; no lint pass is claimed.
