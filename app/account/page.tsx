@@ -72,7 +72,7 @@ export default async function AccountPage() {
             Your account
           </span>
           <h1 className="font-display text-4xl tracking-tight text-balance">
-            Northstar {tier?.name ?? 'Free'}
+            Ginicci {tier?.name ?? 'Free'}
           </h1>
           <p className="break-all text-sm text-muted-foreground">{session.user.email}</p>
         </header>
@@ -101,7 +101,7 @@ export default async function AccountPage() {
           ) : (
             <>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                {"You're on the Free plan. Upgrade for more agents and tasks."}
+                {"Your account includes six successful Premium trial uses when enabled. Compare configured plans for additional usage, with the same AI quality."}
               </p>
               <Link
                 href="/pricing"

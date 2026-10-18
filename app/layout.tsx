@@ -25,13 +25,13 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-jetbrains'
 });
 
-const title = 'Northstar by Ginicci — AI agents for your business, from $0'
+const title = 'Ginicci — Your AI companion'
 const description =
   'A friendly AI assistant for your questions, ideas and next steps. Use Ginicci on the website or install the app with one shared account.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: title, template: '%s | Northstar by Ginicci' },
+  title: { default: title, template: '%s | Ginicci' },
   description,
   applicationName: 'Ginicci',
   manifest: '/manifest.webmanifest',

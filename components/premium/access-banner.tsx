@@ -33,9 +33,10 @@ export function PremiumAccessBanner() {
   }
   return <section aria-label="Premium access" className="border-b border-foreground/10 px-4 py-3 text-sm">
     <p role="status">{balance ? balance.paid ? 'Premium subscription verified' : `${balance.remaining} of 6 premium uses remaining` : 'Sign in to view premium access, or check again when the service is available.'}</p>
-    {!!balance?.pending && <p className="text-xs text-muted-foreground">{balance.pending} use(s) reserved while processing or awaiting delivery. Recover saved results if interrupted.</p>}
-    {balance && !balance.paid && balance.remaining <= 2 && <div className="mt-2 rounded-lg border p-3">
-      <p>{balance.remaining === 0 ? 'You’ve experienced the power of Premium! Your six complimentary premium uses are complete.' : 'Enjoying Premium? Keep access to every specialist and the same advanced AI quality.'}</p>
+    {balance && !balance.paid && <p className="text-xs text-muted-foreground">Only successful qualifying results count. Failed or stopped generation is not charged. A qualifying voice session counts once, not per sentence. Your balance is shared with the website and installed app.</p>}
+    {!!balance?.pending && <p className="text-xs text-muted-foreground">{balance.pending} use(s) reserved, not yet charged, while processing or awaiting delivery. Recover saved results if interrupted.</p>}
+    {balance && !balance.paid && balance.remaining === 0 && <div className="mt-2 rounded-lg border p-3">
+      <p>Your six successful Premium uses are complete. You can review your saved results, or compare plans if you’d like to continue.</p>
       <Link className="mt-2 inline-flex min-h-11 items-center font-medium underline" href="/pricing">Upgrade to Premium</Link>
       <p className="text-xs text-muted-foreground">Free browsing and your saved results remain available.</p>
     </div>}

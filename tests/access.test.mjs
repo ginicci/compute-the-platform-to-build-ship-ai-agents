@@ -41,6 +41,8 @@ test('all agents share warm non-dependent honest behavior without forced intake'
     const prompt=systemPromptFor(agent)
     assert.match(prompt,/warm, grounded conversational style/)
     assert.match(prompt,/Avoid canned greetings/)
+    assert.match(prompt,/one specific optional next step based on the actual task/)
+    assert.match(prompt,/Do not repeatedly promote subscriptions or upgrades/)
     assert.match(prompt,/emotional dependency/)
     assert.match(prompt,/Be honest that you are an AI/)
     assert.match(prompt,/never claim memories or preferences that were not provided/)
