@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         await hangupVoice(row.provider_call_id)
         await pool.query('UPDATE premium_requests SET provider_ended_at = now() WHERE id = $1', [row.id])
         ended++
-      } catch { /* Leave the row retryable; no successful teardown is fabricated. */ }
+      } catch { /* Leave the row retryable; no accepted hangup is fabricated. */ }
     }
     return Response.json({ checked: rows.length, ended, retryRequired: rows.length !== ended }, { status: rows.length === ended ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
   } catch { return Response.json({ error: 'Watchdog unavailable' }, { status: 503 }) }
