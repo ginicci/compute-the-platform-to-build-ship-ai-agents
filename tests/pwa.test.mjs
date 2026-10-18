@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import ts from 'typescript'
+import { conversationMessages } from '../lib/conversation-input.ts'
 import manifest from '../app/manifest.ts'
 const read = p => readFileSync(new URL('../'+p, import.meta.url), 'utf8')
 test('manifest launches dedicated Ginicci app with actual PNG dimensions', () => {
@@ -10,9 +11,9 @@ test('manifest launches dedicated Ginicci app with actual PNG dimensions', () =>
 })
 test('worker only caches public allowlist and never conversations', () => {
  const sw = read('public/pwa-sw.js'); assert.match(sw, /STATIC.includes\(url.pathname\)/); assert.doesNotMatch(sw, /cache.put|caches.match\('\/api|localStorage/)
- const ui = read('components/pwa/assistant.tsx'); assert.doesNotMatch(ui, /localStorage|sessionStorage|apiKey|generateText/); assert.match(ui, /speechSynthesis/); assert.match(ui, /setHistory\(\[\]\)/)
+ const ui = read('components/pwa/assistant.tsx'); assert.doesNotMatch(ui, /localStorage|sessionStorage|apiKey|generateText/); assert.match(ui, /speechSynthesis/); assert.match(ui, /setMessages\(\[\]\)/)
 })
-function load(mocks) { const exports = {}; const js = ts.transpileModule(read('app/api/conversations/route.ts'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText; new Function('require','exports',js)(n => mocks[n], exports); return exports }
+function load(mocks) { const exports = {}; const js = ts.transpileModule(read('app/api/conversations/route.ts'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText; new Function('require','exports',js)(n => n === '@/lib/conversation-input' ? { conversationMessages, MAX_CONVERSATION_BYTES: 262144 } : mocks[n], exports); return exports }
 test('guest history is rejected before database read or write', async () => {
  let queries=0; const route=load({ '@/lib/session': {getUserSession:async()=>null}, '@/lib/db': {pool:{query:async()=>{queries++}}}, '@/lib/chat-input':{} })
  assert.equal((await route.GET()).status,401); assert.equal((await route.PUT(new Request('https://example.com'))).status,401); assert.equal(queries,0)

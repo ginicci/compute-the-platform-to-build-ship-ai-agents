@@ -1,4 +1,4 @@
-import { bigserial, boolean, integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { bigserial, boolean, integer, pgTable, primaryKey, text, timestamp, uuid, jsonb } from 'drizzle-orm/pg-core'
 
 // Better Auth owns this table; only the columns the app reads are declared.
 export const user = pgTable('user', {
@@ -73,6 +73,9 @@ export const premiumRequest = pgTable('premium_requests', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   completedAt: timestamp('completed_at', { withTimezone: true }),
   deliveredAt: timestamp('delivered_at', { withTimezone: true }),
+  providerCallId: text('provider_call_id'),
+  providerUsage: jsonb('provider_usage'),
+  providerEndedAt: timestamp('provider_ended_at', { withTimezone: true }),
 })
 export const premiumPlan = pgTable('premium_plans', {
   tierId: text('tier_id').notNull(),
@@ -81,3 +84,10 @@ export const premiumPlan = pgTable('premium_plans', {
   tasksPerPeriod: integer('tasks_per_period').notNull(),
   enabled: boolean('enabled').notNull().default(false),
 }, table => [primaryKey({ columns: [table.tierId, table.interval] })])
+
+export const accountPreferences = pgTable('account_preferences', {
+  userId: text('user_id').primaryKey(),
+  voice: text('voice').notNull().default('marin'),
+  autoSave: boolean('auto_save').notNull().default(false),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})

@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { PremiumAccessBanner } from '@/components/premium/access-banner'
 import { acknowledgePremiumResult, refreshPremiumBalance } from '@/lib/premium-client'
+import { LiveVoice } from '@/components/conversation/live-voice'
+import { ConversationLibrary } from '@/components/conversation/library'
+import { RichMessage } from '@/components/conversation/rich-message'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import Link from 'next/link'
@@ -146,14 +149,15 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
   const [showJump, setShowJump] = useState(false)
   const scrollRef = useRef<HTMLElement>(null)
   const pinnedRef = useRef(true)
-  const { messages, sendMessage, status, stop, error, regenerate } = useChat({ id: agentId, transport, onFinish: async ({ message, isAbort, isError }) => { if (!isAbort && !isError) await acknowledgePremiumResult(message.id).catch(() => {}); refreshPremiumBalance() }, onError: refreshPremiumBalance })
+  const { messages, setMessages, sendMessage, status, stop, error } = useChat({ id: agentId, transport, onFinish: async ({ message, isAbort, isError }) => { if (!isAbort && !isError) await acknowledgePremiumResult(message.id).catch(() => {}); refreshPremiumBalance() }, onError: refreshPremiumBalance })
 
+  const [liveVoiceActive, setLiveVoiceActive] = useState(false)
   const [voiceLimited, setVoiceLimited] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const busy = status === 'submitted' || status === 'streaming'
   const errorCode = limitCode(error)
-  const blocked = outOfTasks || voiceLimited || errorCode === 'task_limit'
+  const blocked = liveVoiceActive || outOfTasks || voiceLimited || errorCode === 'task_limit'
 
   const voice = useVoiceInput({
     agentId,
@@ -198,8 +202,17 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
     requestAnimationFrame(() => scrollToBottom())
   }
 
+  function regenerateFresh() {
+    const last = messages.findLastIndex(m => m.role === 'user')
+    if (last < 0 || busy || liveVoiceActive) return
+    const text = messages[last].parts.filter(p => p.type === 'text').map(p => p.text).join('')
+    setMessages(messages.slice(0, last))
+    sendMessage({ id: crypto.randomUUID(), role: 'user', parts: [{ type: 'text', text }] }, { body: { agentId } })
+  }
   return (
     <>
+      <ConversationLibrary messages={messages} busy={busy || liveVoiceActive} onLoad={next => { stop(); setMessages(next) }} />
+      <details className="px-4 py-2 text-sm"><summary className="min-h-11 cursor-pointer">Talk live with your AI</summary><LiveVoice messages={messages} agentId={agentId} disabled={busy} onActiveChange={setLiveVoiceActive} onTranscript={turns => setMessages(current => [...current, ...turns])} /></details>
       <div className="relative flex min-h-0 flex-1 flex-col">
       <section
         ref={scrollRef}
@@ -237,15 +250,13 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
             .join('')
           if (message.role === 'user') {
             return (
-              <p key={message.id} translate="no" className="ml-auto max-w-[85%] whitespace-pre-wrap bg-primary/15 px-4 py-3 text-base leading-relaxed text-foreground">
-                {text}
-              </p>
+              <div key={message.id} className="ml-auto max-w-[85%] bg-primary/15 px-4 py-3"><p translate="no" className="whitespace-pre-wrap">{text}</p><button className="min-h-11 text-xs underline" disabled={busy || liveVoiceActive} onClick={() => { setInput(text); setMessages(messages.slice(0, index)); inputRef.current?.focus() }}>Edit & resend</button></div>
             )
           }
           return (
             <div key={message.id} className="flex flex-col gap-1">
               <p className="font-mono text-[10px] uppercase tracking-widest text-primary">{agent.name}</p>
-              <p translate="no" className="whitespace-pre-wrap text-base leading-relaxed text-foreground">{text}</p>
+              <RichMessage text={text} />
               {text && !stillWriting && (
                 <button
                   type="button"
@@ -276,7 +287,7 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
           </p>
         )}
 
-        {blocked && (
+        {blocked && !liveVoiceActive && (
           <div role="alert" className="flex flex-col gap-3 border border-primary/50 px-4 py-4 text-sm leading-relaxed text-foreground">
             <p>{"You've used all your tasks for this month. Upgrade to keep going, or wait until next month when your tasks reset."}</p>
             <Button asChild className="min-h-11 self-start">
@@ -314,7 +325,7 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
               disabled={busy || blocked}
               onClick={() => {
                 onSend()
-                regenerate({ body: { agentId } })
+                regenerateFresh()
               }}
             >
               <RotateCcw aria-hidden="true" />
@@ -340,6 +351,8 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
       </div>
 
       <div className="flex flex-col border-t border-border bg-background">
+      {liveVoiceActive && <p className="px-4 text-sm">End voice to continue typing in this conversation.</p>}
+      {!!messages.length && !busy && !liveVoiceActive && <button className="min-h-11 text-sm underline" onClick={regenerateFresh}>Generate a new answer (one premium use on success)</button>}
       {voiceError && (
         <div role="alert" className="flex items-start justify-between gap-3 px-4 pt-3 text-sm leading-relaxed text-foreground sm:px-6">
           <span>{voiceError}</span>

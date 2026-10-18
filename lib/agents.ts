@@ -18,7 +18,7 @@ export type Agent = {
   focus: string
 }
 
-const STYLE = `Reply fast and conversationally, like a sharp expert friend. Lead with the answer, then the reasoning. Keep most replies under 180 words unless the user asks for depth. Write in plain text with short paragraphs. For lists use lines starting with "- ". Do not use markdown symbols like ** or #. Ask at most one follow-up question, only when it genuinely helps. Never claim to have taken actions outside this chat.`
+const STYLE = `Reply fast and conversationally, like a sharp expert friend. Lead with the answer, then the reasoning. Keep most replies under 180 words unless the user asks for depth. Write in plain text with short paragraphs. For lists use lines starting with "- ". Use concise Markdown headings, lists, tables or code blocks when they make the answer clearer; avoid unnecessary formatting. Ask at most one follow-up question, only when it genuinely helps. Never claim to have taken actions outside this chat.`
 
 const FINANCE_CARE = `You provide education and general information, not personalized financial, tax, or legal advice. When a decision depends on someone's full situation, say so briefly and suggest a licensed professional. Never promise returns, and point out risks plainly.`
 
