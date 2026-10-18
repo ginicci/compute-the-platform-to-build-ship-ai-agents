@@ -8,6 +8,8 @@ import { useEffect, useRef } from "react";
 
 const footerLinks = {
   Product: [
+    { name: "Help", href: "/help" },
+    { name: "Billing & account", href: "/account" },
     { name: "What you develop", href: "#features" },
     { name: "How it works", href: "#how-it-works" },
     { name: "Pricing", href: "#pricing" },

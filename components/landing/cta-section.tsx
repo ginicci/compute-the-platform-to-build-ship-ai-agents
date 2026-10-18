@@ -68,8 +68,8 @@ export function CtaSection() {
                     size="lg"
                     className="bg-foreground hover:bg-foreground/90 text-background px-8 h-14 text-base rounded-full group"
                   >
-                    <a href="/sign-up">
-                      Start your free trial
+                    <a href="/assistant">
+                      Start chatting free
                       <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                     </a>
                   </Button>
@@ -84,7 +84,7 @@ export function CtaSection() {
                 </div>
 
                 <p className="text-sm text-muted-foreground mt-8 font-mono">
-                  Free plan forever · 14-day trial on Plus and Team · Cancel anytime
+                  Six successful Premium trial uses · No card required · Subscription checkout is test-only
                 </p>
               </div>
 

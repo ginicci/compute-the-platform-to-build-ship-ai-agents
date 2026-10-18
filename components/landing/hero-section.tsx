@@ -132,7 +132,7 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex flex-col justify-center items-start overflow-hidden bg-black">
+    <section id="welcome" aria-label="Ginicci Tree" className="relative min-h-screen flex flex-col justify-center items-start overflow-hidden bg-black">
       {/* Background video */}
       <div className="absolute inset-0 z-0">
         <video
@@ -189,7 +189,7 @@ export function HeroSection() {
         ))}
       </div>
       
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-5 sm:px-6 lg:px-12 py-28 sm:py-32 lg:py-40">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-5 sm:px-6 lg:px-12 pt-28 pb-52 sm:pt-32 sm:pb-52 lg:py-40">
         <div className="lg:max-w-[55%]">
         {/* Eyebrow */}
         <div 
@@ -238,9 +238,9 @@ export function HeroSection() {
       >
         <div className="max-w-[1400px] mx-auto grid grid-cols-3 gap-3 sm:flex sm:items-start sm:gap-10 lg:gap-20">
           {[
-            { value: "10x", label: "faster workflows" },
-            { value: "99.9%", label: "reliable execution" },
-            { value: "24/7", label: "always-on operations" },
+            { value: "Chat", label: "start with a question" },
+            { value: "6 uses", label: "successful Premium trial results" },
+            { value: "One account", label: "website and installed app" },
           ].map((stat) => (
             <div key={stat.label} className="flex flex-col gap-2">
               <span className="text-3xl lg:text-4xl font-display text-white">{stat.value}</span>
