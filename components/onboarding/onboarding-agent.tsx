@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { PremiumAccessBanner } from '@/components/premium/access-banner'
 import { acknowledgePremiumResult, refreshPremiumBalance } from '@/lib/premium-client'
+import { ChatNavigation } from '@/components/access/chat-navigation'
 import { LiveVoice } from '@/components/conversation/live-voice'
 import { ConversationLibrary } from '@/components/conversation/library'
 import { RichMessage } from '@/components/conversation/rich-message'
@@ -43,16 +44,17 @@ export function OnboardingAgent({ plan }: { plan: AgentPlan }) {
 
   return (
     <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col overflow-hidden">
+      <ChatNavigation />
       <header className="flex flex-col gap-3 border-b border-border px-4 pb-3 pt-4 sm:px-6">
         <div className="flex items-baseline justify-between gap-3">
-          <h1 className="font-display text-xl tracking-tight">Northstar agents</h1>
+          <h1 className="font-display text-xl tracking-tight">Ginicci · Let’s talk</h1>
           <Link href="/account" className="font-mono text-[10px] uppercase tracking-widest text-primary">
             {plan.premiumTrial ? "Account & Premium" : `${plan.name} plan`}
           </Link>
         </div>
         {plan.premiumTrial ? <PremiumAccessBanner /> : <UsageMeter used={tasksUsed} limit={plan.tasksLimit} />}
-        <p className="text-xs text-muted-foreground">AI guidance, plans, and drafts. This chat does not book services, make payments, or send messages for you.</p>
-        <nav aria-label="Agent categories" className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
+        <p className="text-xs text-muted-foreground">A friendly AI assistant for your questions and next steps. Save a chat to pick it up on another screen.</p>
+        <nav aria-label="Optional specialist topics" className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
           <ul className="flex w-max gap-2">
             {AGENTS.map((item) => {
               const itemLocked = !plan.allowedAgentIds.includes(item.id)
@@ -146,6 +148,7 @@ function UpgradePanel({ title, body }: { title: string; body: string }) {
 function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTasks: boolean; onSend: () => void }) {
   const agent = getAgent(agentId) ?? AGENTS[0]
   const [input, setInput] = useState('')
+  const [conversationKey, setConversationKey] = useState(0)
   const [showJump, setShowJump] = useState(false)
   const scrollRef = useRef<HTMLElement>(null)
   const pinnedRef = useRef(true)
@@ -211,7 +214,8 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
   }
   return (
     <>
-      <ConversationLibrary messages={messages} busy={busy || liveVoiceActive} onLoad={next => { stop(); setMessages(next) }} />
+      <button type="button" className="mx-4 min-h-11 shrink-0 self-start text-sm underline" disabled={busy || liveVoiceActive} onClick={() => { stop(); setMessages([]); setInput(''); setConversationKey(k => k + 1) }}>New conversation</button>
+      <ConversationLibrary key={conversationKey} messages={messages} busy={busy || liveVoiceActive} onLoad={next => { stop(); setMessages(next) }} />
       <details className="px-4 py-2 text-sm"><summary className="min-h-11 cursor-pointer">Talk live with your AI</summary><LiveVoice messages={messages} agentId={agentId} disabled={busy} onActiveChange={setLiveVoiceActive} onTranscript={turns => setMessages(current => [...current, ...turns])} /></details>
       <div className="relative flex min-h-0 flex-1 flex-col">
       <section

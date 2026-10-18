@@ -10,6 +10,9 @@ const navLinks = [
   { name: "Ecosystem", href: "#infra" },
   { name: "How it works", href: "#integrations" },
   { name: "Commitments", href: "#security" },
+  { name: "Open the App", href: "/assistant" },
+  { name: "Install the App", href: "/install" },
+  { name: "Use the Website", href: "/onboarding" },
 ];
 
 export function Navigation() {
@@ -37,14 +40,15 @@ export function Navigation() {
             <span className={`font-display tracking-tight ${chrome ? "text-xl text-foreground" : "text-xl text-white sm:text-2xl"}`}>GINICCI</span>
             <span className={`font-mono ${chrome ? "text-[10px] text-muted-foreground" : "text-[10px] text-white/60 sm:text-xs"}`}>TM</span>
           </a>
-          <div className="hidden items-center gap-6 lg:flex xl:gap-10">
+          <div className="hidden items-center gap-3 xl:flex xl:gap-5">
             {navLinks.map((link) => <a key={link.name} href={link.href} className={`text-sm transition-colors hover:text-foreground ${chrome ? "text-foreground/70" : "text-white/70 hover:text-white"}`}>{link.name}</a>)}
           </div>
           <div className="hidden items-center gap-4 md:flex">
             <LanguagePicker tone={chrome ? "dark" : "light"} />
             <a href="/sign-in" className={`inline-flex min-h-11 items-center text-sm transition-colors ${chrome ? "text-foreground/70 hover:text-foreground" : "text-white/70 hover:text-white"}`}>Sign in</a>
-            <a href="/sign-up" className={`inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-medium transition-colors ${chrome ? "bg-foreground text-background hover:bg-foreground/90" : "bg-white text-black hover:bg-white/90"}`}>Request access</a>
+            <a href="/assistant" className={`inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-medium transition-colors ${chrome ? "bg-foreground text-background hover:bg-foreground/90" : "bg-white text-black hover:bg-white/90"}`}>Start chatting</a>
           </div>
+          <a href="/assistant" className={`inline-flex min-h-11 items-center px-3 text-sm md:hidden ${chrome ? "text-foreground" : "text-white"}`}>Open App</a>
           <button type="button" onClick={() => setIsMobileMenuOpen((open) => !open)} className={`inline-flex min-h-11 min-w-11 items-center justify-center md:hidden ${chrome ? "text-foreground" : "text-white"}`} aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"} aria-expanded={isMobileMenuOpen}>
             {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -58,7 +62,7 @@ export function Navigation() {
           <LanguagePicker className="mb-6 self-start" />
           <div className="grid grid-cols-2 gap-3 border-t border-foreground/10 pt-6">
             <a href="/sign-in" className="inline-flex min-h-12 items-center justify-center rounded-full border border-foreground/20 text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>Sign in</a>
-            <a href="/sign-up" className="inline-flex min-h-12 items-center justify-center rounded-full bg-foreground text-background text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>Request access</a>
+            <a href="/assistant" className="inline-flex min-h-12 items-center justify-center rounded-full bg-foreground text-background text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>Start chatting</a>
           </div>
         </div>
       </div>

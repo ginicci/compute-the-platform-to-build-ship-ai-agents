@@ -1,3 +1,4 @@
+import { AppAccess } from '@/components/access/app-access'
 import { Navigation } from "@/components/landing/navigation";
 import { HeroSection } from "@/components/landing/hero-section";
 import { FeaturesSection } from "@/components/landing/features-section";
@@ -18,7 +19,7 @@ export default function Home() {
     <main className="relative min-h-screen overflow-x-hidden">
       <Navigation />
       <HeroSection />
-      <div className="px-6 py-4"><a className="underline" href="/assistant">Open Ginicci Assistant</a> · <a href="/install" className="underline">Install on your phone</a></div>
+      <AppAccess />
       <section className="mx-auto max-w-5xl px-6 py-8"><h2 className="text-3xl">Ginicci for your business</h2><p>Explore practical business services without spending AI credits. AI trials are limited and checkout is paused during launch verification.</p><a className="underline" href="/services">Explore services and share Ginicci</a></section>
       <FeaturesSection />
       <HowItWorksSection />
