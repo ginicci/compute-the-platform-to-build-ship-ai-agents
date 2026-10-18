@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { Pool } from 'pg'
+import { conversationMessages } from '../lib/conversation-input.ts'
 import { loadModule } from './helpers/load-module.mjs'
 
 // Opt in to an isolated LOCAL database only. Never use application DATABASE_URL.
@@ -18,6 +19,9 @@ test('PostgreSQL premium reservation and delivery lifecycle', { skip: !url }, as
     const migration = readFileSync(new URL('../scripts/premium-trial.sql', import.meta.url), 'utf8')
     await pool.query(migration)
     await pool.query(migration) // additive migration is safely repeatable
+    await pool.query(readFileSync(new URL('../scripts/pwa-conversations.sql', import.meta.url), 'utf8'))
+    const unifiedMigration = readFileSync(new URL('../scripts/unified-preferences.sql', import.meta.url), 'utf8')
+    await pool.query(unifiedMigration); await pool.query(unifiedMigration)
     const usage = loadModule('lib/premium-usage.ts', { 'server-only': {}, 'node:crypto': await import('node:crypto'), '@/lib/db': { pool }, '@/lib/premium-policy': { PREMIUM_TRIAL_USES: 6 } })
     const user = async () => { const id = randomUUID(); await pool.query('INSERT INTO "user" VALUES ($1)', [id]); return id }
     async function successful(id, key, paid = null) {
@@ -93,6 +97,47 @@ test('PostgreSQL premium reservation and delivery lifecycle', { skip: !url }, as
       await successful(id, 'paid-1', paid); await successful(id, 'paid-2', paid)
       await assert.rejects(usage.reservePremium(id, 'paid-3', 'northstar', [], paid), e => e.code === 'paid_limit')
       await assert.rejects(usage.reservePremium(id, 'unpaid', 'northstar', [], null), e => e.code === 'premium_required')
+    })
+    await t.test('website and PWA read the same persisted preferences, with account isolation and origin enforcement', async () => {
+      const id = await user(), other = await user()
+      let account = id
+      const preferences = loadModule('app/api/preferences/route.ts', {
+        '@/lib/session': {getUserSession:async()=>({user:{id:account}})}, '@/lib/db':{pool},
+        '@/lib/chat-input':{readChatBody:async r=>r.json(),ChatInputError:class extends Error{}},
+      })
+      const req = (origin, data) => new Request('https://example.com/api/preferences',{method:'PUT',headers:{origin},body:JSON.stringify(data)})
+      assert.equal((await preferences.PUT(req('https://evil.example',{voice:'cedar',auto_save:true}))).status,403)
+      assert.equal((await preferences.PUT(req('https://example.com',{voice:'invalid',auto_save:true}))).status,400)
+      assert.equal((await preferences.PUT(req('https://example.com',{voice:'cedar',auto_save:true}))).status,200)
+      assert.deepEqual(await (await preferences.GET()).json(),{voice:'cedar',auto_save:true})
+      account=other; assert.deepEqual(await (await preferences.GET()).json(),{voice:'marin',auto_save:false})
+      account=id; assert.deepEqual(await (await preferences.GET()).json(),{voice:'cedar',auto_save:true})
+    })
+    await t.test('shared history resumes complete premium replies, rejects cross-account writes and stale revisions', async () => {
+      const id=await user(), other=await user();let account=id
+      const route=loadModule('app/api/conversations/route.ts',{
+        '@/lib/session':{getUserSession:async()=>({user:{id:account}})},'@/lib/db':{pool},
+        '@/lib/conversation-input':{conversationMessages,MAX_CONVERSATION_BYTES:262144},'@/lib/chat-input':{readChatBody:async r=>r.json(),ChatInputError:class extends Error{}},
+      })
+      const conversationId=randomUUID()
+      const data={id:conversationId,title:'Shared conversation',messages:[{id:'question',role:'user',parts:[{type:'text',text:'A question'}]},{id:'answer',role:'assistant',parts:[{type:'text',text:'A'.repeat(15000)}]}],revision:0}
+      const save=()=>route.PUT(new Request('https://example.com/api/conversations',{method:'PUT',headers:{origin:'https://example.com'},body:JSON.stringify(data)}))
+      assert.equal((await save()).status,200)
+      const loaded=await (await route.GET()).json(); assert.equal(loaded.conversations[0].messages[1].parts[0].text.length,15000)
+      assert.equal((await save()).status,200) // update from revision zero
+      assert.equal((await save()).status,403) // stale second device cannot overwrite revision one
+      data.revision=1;assert.equal((await save()).status,200)
+      account=other;assert.deepEqual((await (await route.GET()).json()).conversations,[])
+      assert.equal((await save()).status,403)
+    })
+    await t.test('one voice session shares the last trial slot with text and is charged once, not once per sentence', async()=>{
+      const id=await user();for(let i=0;i<5;i++)await successful(id,`text-${i}`)
+      const r=await usage.reservePremium(id,'voice-session','live_voice',{session:'one'},null)
+      await usage.completePremium(r.id,id,'You: Question one\nGinicci: Answer one\nYou: Question two\nGinicci: Answer two')
+      assert.equal((await usage.premiumBalance(id)).pending,1)
+      await usage.acknowledgePremium(r.id,id);await usage.acknowledgePremium(r.id,id)
+      assert.equal((await usage.premiumBalance(id)).used,6)
+      await assert.rejects(usage.reservePremium(id,'next-text','northstar',[],null),e=>e.code==='premium_required')
     })
     await t.test('empty result cannot become a chargeable use', async () => {
       const id = await user(); const r = await usage.reservePremium(id, 'empty', 'northstar', [], null)

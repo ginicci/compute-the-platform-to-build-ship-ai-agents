@@ -45,9 +45,9 @@ export class ChatInputError extends Error {
 }
 
 // Enforce the limit while reading, even for chunked requests without a length.
-export async function readChatBody(request: Request): Promise<unknown> {
+export async function readChatBody(request: Request, maxBytes = MAX_CHAT_BYTES): Promise<unknown> {
   const length = Number(request.headers.get('content-length'))
-  if (length > MAX_CHAT_BYTES) throw new ChatInputError(413)
+  if (length > maxBytes) throw new ChatInputError(413)
   if (!request.body) throw new ChatInputError(400)
   const reader = request.body.getReader()
   const chunks: Uint8Array[] = []
@@ -57,7 +57,7 @@ export async function readChatBody(request: Request): Promise<unknown> {
       const { value, done } = await reader.read()
       if (done) break
       size += value.byteLength
-      if (size > MAX_CHAT_BYTES) {
+      if (size > maxBytes) {
         await reader.cancel()
         throw new ChatInputError(413)
       }

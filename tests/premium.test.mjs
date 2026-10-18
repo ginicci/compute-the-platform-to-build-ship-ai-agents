@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { loadModule } from './helpers/load-module.mjs'
+import { modelContext } from '../lib/conversation-input.ts'
 import { premiumEnabled, paidStatusEligible } from '../lib/premium-policy.ts'
 const read = p => readFileSync(new URL('../' + p, import.meta.url), 'utf8')
 
@@ -58,7 +59,8 @@ function chatHarness({ response = { text: 'Genuine premium output', finishReason
   class PremiumError extends Error {}
   const chat = loadModule('lib/premium-chat.ts', {
     'server-only': {},
-    ai: { convertToModelMessages: async m => m, generateText: async c => { generated++; config = c; if (failure) throw new Error('provider offline'); return response }, createUIMessageStream: o => { o.execute({ writer: { write: c => chunks.push(c) } }); return {} }, createUIMessageStreamResponse: () => new Response('delivered') },
+    '@/lib/conversation-input': { modelContext, MAX_CONVERSATION_BYTES: 262144 },
+    ai: { convertToModelMessages: async m => m, streamText: c => { generated++; config = c; return { fullStream: (async function* () { if (failure) throw new Error('provider offline'); if (response.text) yield { type: 'text-delta', text: response.text }; yield { type: 'finish', finishReason: response.finishReason } })() } }, createUIMessageStream: o => ({ done: o.execute({ writer: { write: c => chunks.push(c) } }) }), createUIMessageStreamResponse: async ({ stream }) => { await stream.done; return new Response('delivered') } },
     '@/lib/agents': { getAgent: () => ({ id: 'northstar' }), systemPromptFor: () => 'shared premium prompt' },
     '@/lib/chat-input': { readChatBody: async () => ({ messages: [{ id: 'stable-request', role: 'user', parts: [{ type: 'text', text: 'hi' }] }] }), validateChatMessages: m => m, ChatInputError: class extends Error {} },
     '@/lib/legal': { hasCurrentConsent: async () => true }, '@/lib/premium-billing': { premiumPaidAccess: async () => null },
@@ -76,7 +78,8 @@ test('premium route generates full output once, saves recoverable result, and st
 })
 test('failed, empty, truncated and filtered provider results do not become chargeable', async () => {
   for (const options of [{ failure: true }, { response: { text: '', finishReason: 'stop' } }, { response: { text: 'partial', finishReason: 'length' } }, { response: { text: 'blocked', finishReason: 'content-filter' } }]) {
-    const h = chatHarness(options); assert.equal((await h.chat.premiumChat(request(), 'user')).status, 503)
+    const h = chatHarness(options); assert.equal((await h.chat.premiumChat(request(), 'user')).status, 200)
+    assert.ok(h.stats().chunks.some(c => c.type === 'error'))
     assert.equal(h.stats().completed, 0); assert.equal(h.stats().failed, 1)
   }
 })

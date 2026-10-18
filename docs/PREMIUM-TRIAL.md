@@ -1,5 +1,7 @@
 # Six-use premium trial — review and release guide
 
+> **Architecture update (2026-10-18):** PR #46 has since been merged by the owner. Current production alias inspection places `www.ginicci.app` and the `.app`/`.com` aliases on `compute-the-platform-to-build`; the earlier separate-live-site repository blocker below is historical, not current routing. See `UNIFIED-PLATFORM.md` for the follow-up shared history/preferences, streaming and preview-only voice implementation and its unverified release gates. No new production changes were made by the follow-up agent work.
+
 ## Delivery status
 
 Implemented in the linked application for review; **not production-activated**. No production database migration, settings/domain/repository connection change, provider call, or payment was performed by this work. Checkout is test-only in code. Do not merge as an assertion that the separate live domain is integrated.
