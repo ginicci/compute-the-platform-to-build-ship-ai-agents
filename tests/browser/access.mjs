@@ -15,10 +15,11 @@ const entry = `
 import React from 'react'; import {createRoot} from 'react-dom/client';
 import {InstallProvider} from './components/access/install-provider';
 import {AppAccess} from './components/access/app-access';
+import {PremiumAccessBanner} from './components/premium/access-banner';
 import {ChatNavigation} from './components/access/chat-navigation';
 import InstallPage from './app/install/page'; import HelpPage from './app/help/page';
 const route=location.pathname;
-createRoot(document.getElementById('root')).render(<InstallProvider>{route==='/install'?<InstallPage/>:route==='/help'?<HelpPage/>:<><ChatNavigation/><AppAccess/></>}</InstallProvider>);
+createRoot(document.getElementById('root')).render(<InstallProvider>{route==='/trial'?<PremiumAccessBanner/>:route==='/install'?<InstallPage/>:route==='/help'?<HelpPage/>:<><ChatNavigation/><AppAccess/></>}</InstallProvider>);
 `
 await build({ stdin: { contents: entry, resolveDir: root, loader: 'tsx' }, outfile: path.join(temp, 'bundle.js'), bundle: true, platform: 'browser', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' }, plugins: [{ name: 'next-fixture', setup(b) {
   b.onResolve({ filter: /^next\/(link|navigation)$/ }, args => ({ path: args.path, namespace: 'next-fixture' }))
@@ -46,7 +47,7 @@ try{
     await page.getByRole('link',{name:'Help',exact:true}).click();await page.getByRole('heading',{name:'Let’s make this easy'}).waitFor()
   })
   for(const outcome of ['accepted','dismissed','error'])await scenario('Prompt lifecycle: '+outcome,{},async page=>{
-    await page.goto(base);await page.getByRole('heading',{name:'A little clarity. A good conversation. Your next step.'}).waitFor()
+    await page.goto(base);await page.getByRole('heading',{name:'Ginicci, one tap away.'}).waitFor()
     await page.evaluate(result=>{
       window.prompts=0
       const event=new Event('beforeinstallprompt',{cancelable:true})
@@ -62,12 +63,12 @@ try{
     assert.match(notice,outcome==='accepted'?/accepted/:outcome==='dismissed'?/No problem/:/could not open/)
   })
   await scenario('iPhone: manual Safari instructions, never a fake native install prompt',{userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1',viewport:{width:390,height:844},isMobile:true,hasTouch:true},async page=>{
-    await page.goto(base+'/install');await page.getByText('On iPhone or iPad, use the manual steps below.',{exact:false}).waitFor()
+    await page.goto(base+'/install');await page.getByRole('heading',{name:'iPhone / iPad',exact:true}).waitFor();assert.equal(await page.getByRole('heading',{name:'Android',exact:true}).count(),0)
     assert.equal(await page.getByRole('button',{name:'Install the App',exact:true}).count(),0)
-    await page.getByText('Tap Share (the square with an arrow).',{exact:false}).waitFor()
+    await page.getByText('Tap Share → Add to Home Screen → Add.',{exact:false}).waitFor()
   })
   await scenario('Android: menu guidance with website fallback',{userAgent:'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130.0.0.0 Mobile Safari/537.36',viewport:{width:412,height:915},isMobile:true,hasTouch:true},async page=>{
-    await page.goto(base+'/install');await page.getByText('On Android, use the install button if your browser offers it,',{exact:false}).waitFor()
+    await page.goto(base+'/install');await page.getByRole('heading',{name:'Android',exact:true}).waitFor();assert.equal(await page.getByRole('heading',{name:'iPhone / iPad',exact:true}).count(),0)
     assert.equal(await page.getByRole('button',{name:'Install the App',exact:true}).count(),0)
   })
   await scenario('Installed iOS display: continue action and no reinstall prompt',{},async page=>{
@@ -77,12 +78,28 @@ try{
     assert.equal(await page.getByRole('link',{name:'Install the App — how to',exact:true}).count(),0)
   })
   await scenario('appinstalled hides deferred prompt without pretending browser tab is an app window',{},async page=>{
-    await page.goto(base);await page.getByRole('heading',{name:'A little clarity. A good conversation. Your next step.'}).waitFor()
+    await page.goto(base);await page.getByRole('heading',{name:'Ginicci, one tap away.'}).waitFor()
     await page.evaluate(()=>{const e=new Event('beforeinstallprompt');e.prompt=async()=>{};e.userChoice=Promise.resolve({outcome:'accepted'});window.dispatchEvent(e)})
     await page.getByRole('button',{name:'Install the App',exact:true}).waitFor()
     await page.evaluate(()=>window.dispatchEvent(new Event('appinstalled')))
     await page.getByRole('status').waitFor();assert.equal(await page.getByRole('button',{name:'Install the App',exact:true}).count(),0)
     assert.equal(await page.getByText('You’re using the app',{exact:true}).count(),0)
+  })
+  await scenario('Trial balance: successful uses, held reservations and respectful exhaustion',{},async page=>{
+    let balance={remaining:2,pending:1,paid:false}
+    await page.route('**/api/premium/status',route=>route.fulfill({json:balance}))
+    await page.goto(base+'/trial')
+    await page.getByRole('status').filter({hasText:'2 of 6 premium uses remaining'}).waitFor()
+    await page.getByText('reserved, not yet charged',{exact:false}).waitFor()
+    assert.equal(await page.getByRole('link',{name:'Upgrade to Premium',exact:true}).count(),0)
+    balance={remaining:0,pending:0,paid:false}
+    await page.evaluate(()=>window.dispatchEvent(new Event('premium-balance')))
+    await page.getByRole('link',{name:'Upgrade to Premium',exact:true}).waitFor()
+    await page.getByText('review your saved results',{exact:false}).waitFor()
+    balance={remaining:0,pending:0,paid:true}
+    await page.evaluate(()=>window.dispatchEvent(new Event('premium-balance')))
+    await page.getByRole('status').filter({hasText:'Premium subscription verified'}).waitFor()
+    assert.equal(await page.getByRole('link',{name:'Upgrade to Premium',exact:true}).count(),0)
   })
   console.log(`${passed} browser scenarios passed (Chromium, synthetic install events/device emulation; no OS install performed).`)
 }finally{await browser.close();await new Promise(r=>server.close(r));await rm(temp,{recursive:true,force:true})}
