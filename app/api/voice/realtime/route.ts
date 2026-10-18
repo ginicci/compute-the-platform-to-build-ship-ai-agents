@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const { rows: [prefs] } = await pool.query('SELECT voice FROM account_preferences WHERE user_id = $1', [session.user.id])
     const voice = prefs?.voice === 'cedar' ? 'cedar' : 'marin'
     const call = await createVoiceCall(input.sdp, voiceSessionConfig(process.env.REALTIME_MODEL!, voice,
-      systemPromptFor(agent) + '\nYou are an AI voice, never a human. Speak warmly, naturally and concisely. Allow interruptions. Never claim external actions.'), session.user.id)
+      systemPromptFor(agent) + '\nYou are an AI voice, never a human. Speak warmly with comfortable pacing and natural pauses. Keep turns brief enough for a conversation, adapt to the user’s tone and allow interruptions. Avoid repeated introductions or scripted reassurance. Never claim external actions.'), session.user.id)
     callId = call.id
     await pool.query('UPDATE premium_requests SET provider_call_id = $2 WHERE id = $1', [reservation.id, call.id])
     const turns = context.slice(-8).map(m => ({ role: m.role, text: m.parts.filter(p => p.type === 'text').map(p => p.text).join('').slice(0, 4000) }))

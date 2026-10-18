@@ -1,3 +1,4 @@
+import { InstallProvider } from '@/components/access/install-provider'
 import React from "react"
 import type { Metadata, Viewport } from 'next'
 import { siteUrl } from '@/lib/site'
@@ -26,13 +27,16 @@ const jetbrainsMono = JetBrains_Mono({
 
 const title = 'Northstar by Ginicci — AI agents for your business, from $0'
 const description =
-  'Run AI agents that grow your business, career, and network. Start free, or try Plus for 14 days free. Plans from $20/month.'
+  'A friendly AI assistant for your questions, ideas and next steps. Use Ginicci on the website or install the app with one shared account.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: title, template: '%s | Northstar by Ginicci' },
   description,
-  applicationName: 'Northstar by Ginicci',
+  applicationName: 'Ginicci',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, title: 'Ginicci', statusBarStyle: 'black-translucent' },
+  icons: { apple: '/pwa/apple-touch-icon.png' },
   keywords: ['AI agents', 'business automation', 'AI assistant for founders', 'professional growth', 'Ginicci', 'Northstar'],
   alternates: { canonical: '/' },
   openGraph: {
@@ -50,7 +54,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   themeColor: '#0a0a0a',
 }
 
@@ -68,7 +71,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className={`${instrumentSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
-        {children}
+        <InstallProvider>{children}</InstallProvider>
         <PageTranslator locale={locale} />
         <Analytics />
       </body>
