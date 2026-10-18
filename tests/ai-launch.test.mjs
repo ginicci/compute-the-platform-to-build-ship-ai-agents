@@ -33,8 +33,8 @@ test('persistent reservation serializes, fails closed, and keeps failed attempts
   assert.match(source, /usage.user_total >= USER_TRIAL_CALLS/)
   assert.doesNotMatch(source, /DELETE FROM|new Map/)
 })
-test('checkout cannot call Stripe and paid tiers cannot bypass launch caps', () => {
-  assert.doesNotMatch(read('app/actions/stripe.ts'), /stripe.checkout|sessions.create/)
+test('checkout requires the new test billing gate; legacy launch remains capped', () => {
+  assert.match(read('app/actions/stripe.ts'), /requireTestBilling\(\)/)
   assert.match(read('app/actions/stripe.ts'), /throw new Error/)
   assert.match(read('lib/plan-limits.ts'), /const tier = FREE_TIER/)
   assert.doesNotMatch(read('lib/tiers.ts'), /Unlimited tasks|tasksPerMonth: null/)
@@ -55,6 +55,7 @@ function loadMocked(path, mocks) {
 test('mock production chat rejects anonymous and paused users without paid calls', async () => {
   let signedIn = false, providerCalls = 0
   const dependencies = {
+    '@/lib/premium-policy': { premiumEnabled: () => false }, '@/lib/premium-chat': {},
     '@/lib/ai-policy': { launchAIEnabled: () => false, aiUnavailable: () => Response.json({ code: 'ai_paused' }, { status: 503 }) },
     '@/lib/ai-quota': { reserveTrialCall: () => { throw new Error('Must not reserve') } },
     'ai': { streamText: () => { providerCalls++; throw new Error('No paid calls') } },

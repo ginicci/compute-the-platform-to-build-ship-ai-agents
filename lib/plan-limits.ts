@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { premiumEnabled } from '@/lib/premium-policy'
+import { AGENTS } from '@/lib/agents'
 import { and, eq, lt, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { agentUsage } from '@/lib/db-schema'
@@ -36,7 +38,7 @@ export async function getPlanContext(user: { id: string; email: string }): Promi
   return {
     tier,
     isOwner,
-    allowedAgentIds: agentIdsForLimit(tier.limits.agents),
+    allowedAgentIds: premiumEnabled() ? AGENTS.map(a => a.id) : agentIdsForLimit(tier.limits.agents),
     tasksLimit: Math.min(tier.limits.tasksPerMonth ?? 5, 5),
     tasksUsed: row?.tasks ?? 0,
     period,

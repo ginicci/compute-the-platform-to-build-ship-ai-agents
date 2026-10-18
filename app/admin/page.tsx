@@ -72,6 +72,7 @@ export default async function AdminPage() {
             Owner only
           </span>
           <h1 className="font-display text-4xl tracking-tight text-balance">Owner console</h1>
+          <Link href="/admin/premium" className="underline">Configure Premium test plans</Link>
           <p className="text-sm leading-relaxed text-muted-foreground">
             Only your account can open this page. Everyone else sees a “not found” page.
           </p>

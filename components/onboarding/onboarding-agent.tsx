@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { PremiumAccessBanner } from '@/components/premium/access-banner'
+import { acknowledgePremiumResult, refreshPremiumBalance } from '@/lib/premium-client'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import Link from 'next/link'
@@ -13,6 +15,7 @@ const transport = new DefaultChatTransport({ api: '/api/chat' })
 
 export type AgentPlan = {
   name: string
+  premiumTrial: boolean
   allowedAgentIds: AgentId[]
   tasksLimit: number | null
   tasksUsed: number
@@ -22,7 +25,7 @@ function limitCode(error: Error | undefined) {
   if (!error) return null
   try {
     const code = JSON.parse(error.message)?.code
-    return ['task_limit', 'agent_locked', 'terms_required', 'sign_in_required', 'service_funding_required'].includes(code) ? code : null
+    return ['task_limit', 'agent_locked', 'terms_required', 'sign_in_required', 'service_funding_required', 'premium_required', 'rate_limit', 'paid_limit', 'request_pending', 'request_failed', 'premium_unavailable', 'request_conflict'].includes(code) ? code : null
   } catch {
     return null
   }
@@ -33,7 +36,7 @@ export function OnboardingAgent({ plan }: { plan: AgentPlan }) {
   const [tasksUsed, setTasksUsed] = useState(plan.tasksUsed)
   const agent = getAgent(agentId) ?? AGENTS[0]
   const locked = !plan.allowedAgentIds.includes(agent.id)
-  const outOfTasks = plan.tasksLimit !== null && tasksUsed >= plan.tasksLimit
+  const outOfTasks = !plan.premiumTrial && plan.tasksLimit !== null && tasksUsed >= plan.tasksLimit
 
   return (
     <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col overflow-hidden">
@@ -41,10 +44,10 @@ export function OnboardingAgent({ plan }: { plan: AgentPlan }) {
         <div className="flex items-baseline justify-between gap-3">
           <h1 className="font-display text-xl tracking-tight">Northstar agents</h1>
           <Link href="/account" className="font-mono text-[10px] uppercase tracking-widest text-primary">
-            {`${plan.name} plan`}
+            {plan.premiumTrial ? "Account & Premium" : `${plan.name} plan`}
           </Link>
         </div>
-        <UsageMeter used={tasksUsed} limit={plan.tasksLimit} />
+        {plan.premiumTrial ? <PremiumAccessBanner /> : <UsageMeter used={tasksUsed} limit={plan.tasksLimit} />}
         <p className="text-xs text-muted-foreground">AI guidance, plans, and drafts. This chat does not book services, make payments, or send messages for you.</p>
         <nav aria-label="Agent categories" className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
           <ul className="flex w-max gap-2">
@@ -75,7 +78,7 @@ export function OnboardingAgent({ plan }: { plan: AgentPlan }) {
       {locked ? (
         <UpgradePanel
           title={`${agent.name} is on paid plans`}
-          body={`Your ${plan.name} plan includes ${plan.allowedAgentIds.length} agents. Upgrade to Plus to unlock all of them, with a 14-day free trial.`}
+          body={`Your ${plan.name} plan includes ${plan.allowedAgentIds.length} agents. Compare plans to unlock more specialists.`}
         />
       ) : (
         <AgentChat
@@ -100,7 +103,7 @@ function UsageMeter({ used, limit }: { used: number; limit: number | null }) {
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{`${shown.toLocaleString('en-US')} of ${limit.toLocaleString('en-US')} tasks this month`}</span>
         {percent >= 80 && (
-          <Link href="/#pricing" className="text-primary underline-offset-4 hover:underline">
+          <Link href="/pricing" className="text-primary underline-offset-4 hover:underline">
             Upgrade
           </Link>
         )}
@@ -127,10 +130,10 @@ function UpgradePanel({ title, body }: { title: string; body: string }) {
       <p className="text-pretty text-base leading-relaxed text-muted-foreground">{body}</p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button asChild size="lg" className="min-h-12">
-          <Link href="/checkout?tier=plus&interval=monthly">Start free trial</Link>
+          <Link href="/pricing">Upgrade to Premium</Link>
         </Button>
         <Button asChild size="lg" variant="outline" className="min-h-12">
-          <Link href="/#pricing">Compare plans</Link>
+          <Link href="/pricing">Compare plans</Link>
         </Button>
       </div>
     </section>
@@ -143,7 +146,7 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
   const [showJump, setShowJump] = useState(false)
   const scrollRef = useRef<HTMLElement>(null)
   const pinnedRef = useRef(true)
-  const { messages, sendMessage, status, stop, error, regenerate } = useChat({ id: agentId, transport })
+  const { messages, sendMessage, status, stop, error, regenerate } = useChat({ id: agentId, transport, onFinish: async ({ message, isAbort, isError }) => { if (!isAbort && !isError) await acknowledgePremiumResult(message.id).catch(() => {}); refreshPremiumBalance() }, onError: refreshPremiumBalance })
 
   const [voiceLimited, setVoiceLimited] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -277,11 +280,13 @@ function AgentChat({ agentId, outOfTasks, onSend }: { agentId: AgentId; outOfTas
           <div role="alert" className="flex flex-col gap-3 border border-primary/50 px-4 py-4 text-sm leading-relaxed text-foreground">
             <p>{"You've used all your tasks for this month. Upgrade to keep going, or wait until next month when your tasks reset."}</p>
             <Button asChild className="min-h-11 self-start">
-              <Link href="/#pricing">See plans</Link>
+              <Link href="/pricing">See plans</Link>
             </Button>
           </div>
         )}
 
+        {['request_pending', 'rate_limit', 'paid_limit', 'request_failed', 'premium_unavailable', 'request_conflict'].includes(errorCode ?? '') && <p role="alert" className="border p-4 text-sm">{errorCode === 'paid_limit' ? 'Your subscription usage allowance is reached. Review your plan in Billing.' : 'Request unavailable. Wait for the current request, or recover saved premium results before sending a new message.'}</p>}
+        {errorCode === 'premium_required' && <UpgradePanel title="Your six premium uses are complete" body="Upgrade to continue using premium AI. Free browsing and saved results remain available." />}
         {errorCode === 'agent_locked' && (
           <UpgradePanel title="This agent is not included in your plan" body="Check your current plan or upgrade to access this agent." />
         )}

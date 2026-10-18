@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { PremiumAccessBanner } from '@/components/premium/access-banner'
+import { acknowledgePremiumResult, refreshPremiumBalance } from '@/lib/premium-client'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, type UIMessage } from 'ai'
 import { authClient } from '@/lib/auth-client'
@@ -20,7 +22,7 @@ export function Assistant() {
   const [voiceSupported, setVoiceSupported] = useState(false)
   const [speechSupported, setSpeechSupported] = useState(false)
   const recognizer = useRef<Recognition | null>(null)
-  const { messages, setMessages, sendMessage, status, error, stop } = useChat({ transport })
+  const { messages, setMessages, sendMessage, status, error, stop } = useChat({ transport, onFinish: async ({ message, isAbort, isError }) => { if (!isAbort && !isError) await acknowledgePremiumResult(message.id).catch(() => {}); refreshPremiumBalance() }, onError: refreshPremiumBalance })
   const busy = status === 'submitted' || status === 'streaming'
   const userId = session?.user.id
   const currentUser = useRef(userId)
@@ -63,11 +65,12 @@ export function Assistant() {
   function newChat() { stop(); setMessages([]); setActive(''); setSidebar(false); setNotice('') }
   function dictate() { if (!confirm('Your browser may send audio to its speech service. Start dictation?')) return; try { recognizer.current?.start(); setListening(true) } catch { setNotice('Microphone unavailable. Please type.') } }
   return <main className="mx-auto flex h-dvh max-w-3xl flex-col bg-background pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <PremiumAccessBanner key={userId ?? "guest"} />
     <header className="flex flex-wrap items-center justify-between gap-2 border-b p-3"><Link href="/" className="text-xl font-bold">Ginicci</Link><div className="flex gap-2"><Button variant="outline" onClick={() => setSidebar(!sidebar)}>History</Button><Button onClick={newChat}>New chat</Button><Link className="self-center text-sm underline" href="/install">Install</Link></div></header>
-    <div className="border-b px-4 py-2 text-xs">{isPending ? 'Checking secure session…' : userId ? `Signed in as ${session?.user.name}. Trial: 5 total, 3/day, 1/minute. Live AI paused until verified.` : 'Guest demo: 2 mock messages per visit, $0 AI usage. History is not saved.'} {!userId && <Link href="/sign-in" className="underline">Sign in</Link>} · <Link href="/sign-up" className="underline">Create account</Link>{userId && <button className="ml-2 underline" onClick={async () => { stop(); setMessages([]); setHistory([]); await authClient.signOut() }}>Sign out</button>}</div>
+    <div className="border-b px-4 py-2 text-xs">{isPending ? 'Checking secure session…' : userId ? `Signed in as ${session?.user.name}. Premium trial balance is shared with the website.` : 'Guest demo: 2 mock messages per visit, $0 AI usage. History is not saved.'} {!userId && <Link href="/sign-in" className="underline">Sign in</Link>} · <Link href="/sign-up" className="underline">Create account</Link>{userId && <button className="ml-2 underline" onClick={async () => { stop(); setMessages([]); setHistory([]); await authClient.signOut() }}>Sign out</button>}</div>
     {sidebar && <nav aria-label="Conversation history" className="max-h-48 overflow-auto border-b p-3"><p className="text-xs">Account-only history. Save explicitly; no private browser cache.</p>{history.map(c => <button key={c.id} className="block min-h-11 w-full text-left" onClick={() => { stop(); setMessages(c.messages); setActive(c.id); setSidebar(false) }}>{c.title}</button>)}<Button variant="outline" disabled={!userId || busy || !messages.length} onClick={save}>Save current chat</Button></nav>}
     <section className="flex-1 space-y-4 overflow-auto p-4" aria-label="Chat messages" aria-live="polite">{!messages.length && <p>Welcome to Ginicci. Ask about a business idea, support draft or next step. Guest replies are mock demonstrations; never enter sensitive information.</p>}{messages.map(m => <article key={m.id} className={`rounded-xl p-3 ${m.role === 'user' ? 'bg-secondary' : 'border'}`}><p className="text-xs font-bold">{m.role === 'user' ? 'You' : 'Ginicci'}</p>{m.parts.filter(p => p.type === 'text').map((p, i) => <p key={i} className="whitespace-pre-wrap break-words">{p.text}</p>)}{m.role === 'assistant' && speechSupported && <button className="mt-2 min-h-11 underline" onClick={() => { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(m.parts.filter(p => p.type === 'text').map(p => p.text).join(' '))) }}>Read aloud</button>}</article>)}</section>
-    {(notice || error) && <p role="status" className="px-4 py-2 text-sm">{notice || 'AI is unavailable or your allowance is exhausted. No automatic retry.'}</p>}
+    {(notice || error) && <p role="status" className="px-4 py-2 text-sm">{notice || 'AI is unavailable or your allowance is exhausted. No automatic retry.'} {error && <Link href="/onboarding" className="underline">Check access and accept current terms</Link>}</p>}
     <form onSubmit={submit} className="flex items-end gap-2 border-t p-3"><textarea aria-label="Message Ginicci" value={input} maxLength={4000} onChange={e => setInput(e.target.value)} rows={2} className="min-w-0 flex-1 rounded-lg border bg-background p-2 text-base" placeholder="Message Ginicci…" /><Button type="button" variant="outline" disabled={!voiceSupported || busy} onClick={() => listening ? recognizer.current?.stop() : dictate()}>{listening ? 'Stop mic' : 'Mic'}</Button><Button disabled={busy || isPending || !input.trim()}>Send</Button></form>
   </main>
 }

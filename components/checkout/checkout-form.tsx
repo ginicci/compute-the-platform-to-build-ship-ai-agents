@@ -20,6 +20,7 @@ export function CheckoutForm({
   interval: BillingInterval
 }) {
   const [isComplete, setIsComplete] = useState(false)
+  const [paymentVerified, setPaymentVerified] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const sessionIdRef = useRef<string | null>(null)
@@ -35,7 +36,8 @@ export function CheckoutForm({
     setIsComplete(true)
     if (!sessionIdRef.current) return
     try {
-      await confirmCheckout(sessionIdRef.current)
+      const result = await confirmCheckout(sessionIdRef.current)
+      setPaymentVerified(result.ok)
     } catch (error) {
       // The Stripe webhook records the plan as a backup.
       console.error("Could not confirm checkout", error)
@@ -48,9 +50,9 @@ export function CheckoutForm({
         <span className="flex size-10 items-center justify-center bg-foreground text-background">
           <Check className="size-5" aria-hidden="true" />
         </span>
-        <h2 className="font-display text-2xl">{"You're subscribed."}</h2>
+        <h2 className="font-display text-2xl">{paymentVerified ? "Your test subscription is verified." : "Payment verification pending"}</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Your plan is active. A receipt is on its way to your inbox.
+          {paymentVerified ? "Premium access is available across your connected interfaces." : "Checkout completion alone does not grant access. Check your account after payment verification."}
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
@@ -75,8 +77,7 @@ export function CheckoutForm({
       <div className="flex flex-col gap-5 border border-foreground/10 p-6">
         <p className="text-sm leading-relaxed text-muted-foreground">
           Your plan renews automatically until you cancel. You can cancel anytime from your account page and keep
-          access until the end of the period you&apos;ve paid for. Paid periods aren&apos;t refundable once they
-          start, so use your free trial to try it out.
+          access until the end of the period you&apos;ve paid for. Use your six complimentary premium uses before subscribing. Refund requests follow the published refund policy.
         </p>
         <TermsCheckbox id="checkout-terms" checked={agreed} onChange={setAgreed} />
         <button
